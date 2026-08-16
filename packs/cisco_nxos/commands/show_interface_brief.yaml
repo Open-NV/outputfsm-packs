@@ -1,0 +1,111 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_interface_brief
+  title: Cisco NX-OS — show interface brief
+  description: Deterministic synthetic, vendor-shaped response for show interface brief on Cisco NX-OS; not captured
+    output.
+  license: Apache-2.0
+  synthetic: true
+  category: interface_summary
+spec:
+  platform: cisco_nxos
+  platform_aliases:
+  - nxos
+  - nx-os
+  - cisco-nxos
+  command: show interface brief
+  aliases:
+  - sh interface brief
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show interface brief
+    total:
+      source: inventory.interfaces.total
+    up:
+      source: inventory.interfaces.up
+    down:
+      source: inventory.interfaces.down
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}# ${command}
+    --------------------------------------------------------------------------------
+    Port          Name             Type  Speed   MTU   Status
+    ${records}
+    Summary: ${total} interfaces, ${up} up, ${down} down
+  result_schema:
+  - path: interfaces.total
+    type: integer
+    source: inventory.interfaces.total
+  - path: interfaces.up
+    type: integer
+    source: inventory.interfaces.up
+  - path: interfaces.down
+    type: integer
+    source: inventory.interfaces.down
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-cisco-nxos-01
+      interfaces:
+        total: 48
+        up: 47
+        down: 1
+      display:
+        records:
+        - Eth1/1       uplink-a         eth   10G     1500  up
+        - Eth1/2       uplink-b         eth   10G     1500  up
+        - mgmt0        management       eth   1G      1500  up
+        - Vlan100      server-gateway   vlan  --      1500  up
+    expected_output: |
+      demo-cisco-nxos-01# show interface brief
+      --------------------------------------------------------------------------------
+      Port          Name             Type  Speed   MTU   Status
+      Eth1/1       uplink-a         eth   10G     1500  up
+      Eth1/2       uplink-b         eth   10G     1500  up
+      mgmt0        management       eth   1G      1500  up
+      Vlan100      server-gateway   vlan  --      1500  up
+      Summary: 48 interfaces, 47 up, 1 down
+    expected_result:
+      interfaces:
+        total: 48
+        up: 47
+        down: 1
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-cisco-nxos-01
+      interfaces:
+        total: 48
+        up: 42
+        down: 6
+      display:
+        records:
+        - Eth1/1       uplink-a         eth   10G     1500  up
+        - Eth1/2       uplink-b         eth   10G     1500  down
+        - mgmt0        management       eth   1G      1500  up
+        - Vlan100      server-gateway   vlan  --      1500  up
+    expected_output: |
+      demo-cisco-nxos-01# show interface brief
+      --------------------------------------------------------------------------------
+      Port          Name             Type  Speed   MTU   Status
+      Eth1/1       uplink-a         eth   10G     1500  up
+      Eth1/2       uplink-b         eth   10G     1500  down
+      mgmt0        management       eth   1G      1500  up
+      Vlan100      server-gateway   vlan  --      1500  up
+      Summary: 48 interfaces, 42 up, 6 down
+    expected_result:
+      interfaces:
+        total: 48
+        up: 42
+        down: 6

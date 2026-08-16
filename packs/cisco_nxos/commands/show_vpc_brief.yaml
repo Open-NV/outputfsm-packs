@@ -1,0 +1,124 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_vpc_brief
+  title: Cisco NX-OS — show vpc brief
+  description: Deterministic synthetic, vendor-shaped response for show vpc brief on Cisco NX-OS; not captured output.
+  license: Apache-2.0
+  synthetic: true
+  category: redundancy
+spec:
+  platform: cisco_nxos
+  platform_aliases:
+  - nxos
+  - nx-os
+  - cisco-nxos
+  command: show vpc brief
+  aliases:
+  - sh vpc brief
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show vpc brief
+    state:
+      source: inventory.redundancy.state
+    peer:
+      source: inventory.redundancy.peer_state
+    ready:
+      generator:
+        name: yes_no
+        source: inventory.redundancy.ready
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}# ${command}
+    ${records}
+    Local state: ${state}
+    Peer state: ${peer}
+    Redundancy ready: ${ready}
+  result_schema:
+  - path: redundancy.state
+    type: string
+    source: inventory.redundancy.state
+  - path: redundancy.peer_state
+    type: string
+    source: inventory.redundancy.peer_state
+  - path: redundancy.ready
+    type: boolean
+    source: inventory.redundancy.ready
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-cisco-nxos-01
+      redundancy:
+        state: active
+        peer_state: standby-ready
+        ready: true
+      display:
+        records:
+        - 'vPC domain id                     : 10'
+        - 'Peer status                       : peer adjacency formed ok'
+        - 'vPC keep-alive status             : peer is alive'
+        - 'Configuration consistency status  : success'
+        - 'Per-vlan consistency status       : success'
+        - 'vPC role                           : primary'
+        - 'Number of vPCs configured          : 4 (all up)'
+    expected_output: |
+      demo-cisco-nxos-01# show vpc brief
+      vPC domain id                     : 10
+      Peer status                       : peer adjacency formed ok
+      vPC keep-alive status             : peer is alive
+      Configuration consistency status  : success
+      Per-vlan consistency status       : success
+      vPC role                           : primary
+      Number of vPCs configured          : 4 (all up)
+      Local state: active
+      Peer state: standby-ready
+      Redundancy ready: yes
+    expected_result:
+      redundancy:
+        state: active
+        peer_state: standby-ready
+        ready: true
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-cisco-nxos-01
+      redundancy:
+        state: active
+        peer_state: standby-cold
+        ready: false
+      display:
+        records:
+        - 'vPC domain id                     : 10'
+        - 'Peer status                       : peer link is down'
+        - 'vPC keep-alive status             : peer is not alive'
+        - 'Configuration consistency status  : success'
+        - 'Per-vlan consistency status       : failed'
+        - 'vPC role                           : primary'
+        - 'Number of vPCs configured          : 4 (2 down)'
+    expected_output: |
+      demo-cisco-nxos-01# show vpc brief
+      vPC domain id                     : 10
+      Peer status                       : peer link is down
+      vPC keep-alive status             : peer is not alive
+      Configuration consistency status  : success
+      Per-vlan consistency status       : failed
+      vPC role                           : primary
+      Number of vPCs configured          : 4 (2 down)
+      Local state: active
+      Peer state: standby-cold
+      Redundancy ready: no
+    expected_result:
+      redundancy:
+        state: active
+        peer_state: standby-cold
+        ready: false

@@ -1,0 +1,104 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_net_arp
+  title: F5 BIG-IP TMOS — show net arp
+  description: Deterministic synthetic, vendor-shaped response for show net arp on F5 BIG-IP TMOS; not captured
+    output.
+  license: Apache-2.0
+  synthetic: true
+  category: arp
+spec:
+  platform: f5_tmos
+  platform_aliases:
+  - f5
+  - bigip
+  - big-ip
+  - tmos
+  command: show net arp
+  aliases:
+  - sh net arp
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show net arp
+    entries:
+      source: inventory.arp.entries
+    incomplete:
+      source: inventory.arp.incomplete
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}(active)(/Common)(tmos)# ${command}
+    ${records}
+    Total entries: ${entries}
+    Incomplete entries: ${incomplete}
+  result_schema:
+  - path: arp.entries
+    type: integer
+    source: inventory.arp.entries
+  - path: arp.incomplete
+    type: integer
+    source: inventory.arp.incomplete
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-f5-tmos-01
+      arp:
+        entries: 96
+        incomplete: 0
+      display:
+        records:
+        - Net::Arp
+        - Ip Address      Mac Address         Vlan                 Expire-in-sec
+        - 192.0.2.2       02:00:00:00:50:01  /Common/external     178
+        - 10.0.0.20       02:00:00:00:50:02  /Common/server       212
+        - 198.51.100.2    (incomplete)      /Common/monitor      4
+    expected_output: |
+      demo-f5-tmos-01(active)(/Common)(tmos)# show net arp
+      Net::Arp
+      Ip Address      Mac Address         Vlan                 Expire-in-sec
+      192.0.2.2       02:00:00:00:50:01  /Common/external     178
+      10.0.0.20       02:00:00:00:50:02  /Common/server       212
+      198.51.100.2    (incomplete)      /Common/monitor      4
+      Total entries: 96
+      Incomplete entries: 0
+    expected_result:
+      arp:
+        entries: 96
+        incomplete: 0
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-f5-tmos-01
+      arp:
+        entries: 96
+        incomplete: 5
+      display:
+        records:
+        - Net::Arp
+        - Ip Address      Mac Address         Vlan                 Expire-in-sec
+        - 192.0.2.2       02:00:00:00:50:01  /Common/external     178
+        - 10.0.0.20       02:00:00:00:50:02  /Common/server       212
+        - 198.51.100.2    (incomplete)      /Common/monitor      4
+    expected_output: |
+      demo-f5-tmos-01(active)(/Common)(tmos)# show net arp
+      Net::Arp
+      Ip Address      Mac Address         Vlan                 Expire-in-sec
+      192.0.2.2       02:00:00:00:50:01  /Common/external     178
+      10.0.0.20       02:00:00:00:50:02  /Common/server       212
+      198.51.100.2    (incomplete)      /Common/monitor      4
+      Total entries: 96
+      Incomplete entries: 5
+    expected_result:
+      arp:
+        entries: 96
+        incomplete: 5

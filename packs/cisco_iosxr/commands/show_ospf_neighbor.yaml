@@ -1,0 +1,112 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_ospf_neighbor
+  title: Cisco IOS XR — show ospf neighbor
+  description: Deterministic synthetic, vendor-shaped response for show ospf neighbor on Cisco IOS XR; not captured
+    output.
+  license: Apache-2.0
+  synthetic: true
+  category: routing_peers
+spec:
+  platform: cisco_iosxr
+  platform_aliases:
+  - iosxr
+  - ios-xr
+  - cisco-ios-xr
+  command: show ospf neighbor
+  aliases:
+  - sh ospf neighbor
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show ospf neighbor
+    peers:
+      source: inventory.routing.peers_total
+    established:
+      source: inventory.routing.peers_established
+    ratio:
+      generator:
+        name: percent
+        source: inventory.routing.established_ratio_pct
+        precision: 1
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    RP/0/RP0/CPU0:${hostname}#${command}
+    ${records}
+    Peer summary: ${established}/${peers} established (${ratio})
+  result_schema:
+  - path: routing.peers_total
+    type: integer
+    source: inventory.routing.peers_total
+  - path: routing.peers_established
+    type: integer
+    source: inventory.routing.peers_established
+  - path: routing.established_ratio_pct
+    type: number
+    source: inventory.routing.established_ratio_pct
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-cisco-iosxr-01
+      routing:
+        peers_total: 8
+        peers_established: 8
+        established_ratio_pct: 100.0
+      display:
+        records:
+        - Neighbor ID     Pri   State           Dead Time   Address         Interface
+        - 203.0.113.2       1   FULL/DR         00:00:33    192.0.2.2       Ethernet1
+        - 203.0.113.3       1   FULL/BDR        00:00:31    198.51.100.2    Ethernet2
+        - 203.0.113.4       1   FULL/DROTHER    00:00:36    10.0.0.2        Vlan100
+        - Process 1, area 0.0.0.0, hello 10, dead 40
+    expected_output: |
+      RP/0/RP0/CPU0:demo-cisco-iosxr-01#show ospf neighbor
+      Neighbor ID     Pri   State           Dead Time   Address         Interface
+      203.0.113.2       1   FULL/DR         00:00:33    192.0.2.2       Ethernet1
+      203.0.113.3       1   FULL/BDR        00:00:31    198.51.100.2    Ethernet2
+      203.0.113.4       1   FULL/DROTHER    00:00:36    10.0.0.2        Vlan100
+      Process 1, area 0.0.0.0, hello 10, dead 40
+      Peer summary: 8/8 established (100.0%)
+    expected_result:
+      routing:
+        peers_total: 8
+        peers_established: 8
+        established_ratio_pct: 100.0
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-cisco-iosxr-01
+      routing:
+        peers_total: 8
+        peers_established: 5
+        established_ratio_pct: 62.5
+      display:
+        records:
+        - Neighbor ID     Pri   State           Dead Time   Address         Interface
+        - 203.0.113.2       1   FULL/DR         00:00:33    192.0.2.2       Ethernet1
+        - 203.0.113.3       1   EXSTART/DR      00:00:31    198.51.100.2    Ethernet2
+        - 203.0.113.4       1   FULL/DROTHER    00:00:36    10.0.0.2        Vlan100
+        - Process 1, area 0.0.0.0, hello 10, dead 40
+    expected_output: |
+      RP/0/RP0/CPU0:demo-cisco-iosxr-01#show ospf neighbor
+      Neighbor ID     Pri   State           Dead Time   Address         Interface
+      203.0.113.2       1   FULL/DR         00:00:33    192.0.2.2       Ethernet1
+      203.0.113.3       1   EXSTART/DR      00:00:31    198.51.100.2    Ethernet2
+      203.0.113.4       1   FULL/DROTHER    00:00:36    10.0.0.2        Vlan100
+      Process 1, area 0.0.0.0, hello 10, dead 40
+      Peer summary: 5/8 established (62.5%)
+    expected_result:
+      routing:
+        peers_total: 8
+        peers_established: 5
+        established_ratio_pct: 62.5

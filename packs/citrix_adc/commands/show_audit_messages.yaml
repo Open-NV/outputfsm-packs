@@ -1,0 +1,112 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_audit_messages
+  title: Citrix ADC / NetScaler — show audit messages
+  description: Deterministic synthetic, vendor-shaped response for show audit messages on Citrix ADC / NetScaler;
+    not captured output.
+  license: Apache-2.0
+  synthetic: true
+  category: logging
+spec:
+  platform: citrix_adc
+  platform_aliases:
+  - citrix
+  - netscaler
+  - citrix-adc
+  command: show audit messages
+  aliases:
+  - sh audit messages
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show audit messages
+    critical:
+      source: inventory.logging.critical_count
+    warnings:
+      source: inventory.logging.warning_count
+    last_event:
+      source: inventory.logging.last_event
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    > ${command}
+    ${records}
+    Message summary: ${critical} critical, ${warnings} warning
+    Last event: ${last_event}
+  result_schema:
+  - path: logging.critical_count
+    type: integer
+    source: inventory.logging.critical_count
+  - path: logging.warning_count
+    type: integer
+    source: inventory.logging.warning_count
+  - path: logging.last_event
+    type: string
+    source: inventory.logging.last_event
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-citrix-adc-01
+      logging:
+        critical_count: 0
+        warning_count: 2
+        last_event: synthetic health event
+      display:
+        records:
+        - 1) 2026-08-16 07:00:01 GMT INFO SYSTEM health poll completed
+        - 2) 2026-08-16 07:00:04 GMT WARNING INTERFACE synthetic utilization threshold crossed
+        - 3) 2026-08-16 07:00:07 GMT INFO HA synthetic health event
+        - 4) 2026-08-16 07:00:09 GMT WARNING SUMMARY critical=0 warning=2
+        - Done
+    expected_output: |
+      > show audit messages
+      1) 2026-08-16 07:00:01 GMT INFO SYSTEM health poll completed
+      2) 2026-08-16 07:00:04 GMT WARNING INTERFACE synthetic utilization threshold crossed
+      3) 2026-08-16 07:00:07 GMT INFO HA synthetic health event
+      4) 2026-08-16 07:00:09 GMT WARNING SUMMARY critical=0 warning=2
+      Done
+      Message summary: 0 critical, 2 warning
+      Last event: synthetic health event
+    expected_result:
+      logging:
+        critical_count: 0
+        warning_count: 2
+        last_event: synthetic health event
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-citrix-adc-01
+      logging:
+        critical_count: 4
+        warning_count: 18
+        last_event: synthetic link and power alarm
+      display:
+        records:
+        - 1) 2026-08-16 07:00:01 GMT INFO SYSTEM health poll completed
+        - 2) 2026-08-16 07:00:04 GMT WARNING INTERFACE synthetic utilization threshold crossed
+        - 3) 2026-08-16 07:00:07 GMT CRITICAL HA synthetic link and power alarm
+        - 4) 2026-08-16 07:00:09 GMT WARNING SUMMARY critical=4 warning=18
+        - Done
+    expected_output: |
+      > show audit messages
+      1) 2026-08-16 07:00:01 GMT INFO SYSTEM health poll completed
+      2) 2026-08-16 07:00:04 GMT WARNING INTERFACE synthetic utilization threshold crossed
+      3) 2026-08-16 07:00:07 GMT CRITICAL HA synthetic link and power alarm
+      4) 2026-08-16 07:00:09 GMT WARNING SUMMARY critical=4 warning=18
+      Done
+      Message summary: 4 critical, 18 warning
+      Last event: synthetic link and power alarm
+    expected_result:
+      logging:
+        critical_count: 4
+        warning_count: 18
+        last_event: synthetic link and power alarm

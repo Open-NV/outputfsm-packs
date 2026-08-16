@@ -1,0 +1,109 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_port_channel_summary
+  title: Cisco NX-OS — show port-channel summary
+  description: Deterministic synthetic, vendor-shaped response for show port-channel summary on Cisco NX-OS; not
+    captured output.
+  license: Apache-2.0
+  synthetic: true
+  category: aggregation
+spec:
+  platform: cisco_nxos
+  platform_aliases:
+  - nxos
+  - nx-os
+  - cisco-nxos
+  command: show port-channel summary
+  aliases:
+  - sh port-channel summary
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show port-channel summary
+    total:
+      source: inventory.aggregation.total
+    up:
+      source: inventory.aggregation.up
+    down:
+      source: inventory.aggregation.down
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}# ${command}
+    ${records}
+    Aggregate summary: ${total} total, ${up} operational, ${down} down
+  result_schema:
+  - path: aggregation.total
+    type: integer
+    source: inventory.aggregation.total
+  - path: aggregation.up
+    type: integer
+    source: inventory.aggregation.up
+  - path: aggregation.down
+    type: integer
+    source: inventory.aggregation.down
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-cisco-nxos-01
+      aggregation:
+        total: 4
+        up: 4
+        down: 0
+      display:
+        records:
+        - Group  Port-channel  Protocol    Ports
+        - '------+-------------+-----------+-----------------------------------------------'
+        - 10     Po10(SU)         LACP      Eth1(P) Eth2(P)
+        - 20     Po20(SU)         LACP      Eth3(P) Eth4(P)
+        - 'Flags: D - down, P - bundled, S - layer2, U - in use'
+    expected_output: |
+      demo-cisco-nxos-01# show port-channel summary
+      Group  Port-channel  Protocol    Ports
+      ------+-------------+-----------+-----------------------------------------------
+      10     Po10(SU)         LACP      Eth1(P) Eth2(P)
+      20     Po20(SU)         LACP      Eth3(P) Eth4(P)
+      Flags: D - down, P - bundled, S - layer2, U - in use
+      Aggregate summary: 4 total, 4 operational, 0 down
+    expected_result:
+      aggregation:
+        total: 4
+        up: 4
+        down: 0
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-cisco-nxos-01
+      aggregation:
+        total: 4
+        up: 2
+        down: 2
+      display:
+        records:
+        - Group  Port-channel  Protocol    Ports
+        - '------+-------------+-----------+-----------------------------------------------'
+        - 10     Po10(SU)         LACP      Eth1(P) Eth2(P)
+        - 20     Po20(SD)         LACP      Eth3(P) Eth4(D)
+        - 'Flags: D - down, P - bundled, S - layer2, U - in use'
+    expected_output: |
+      demo-cisco-nxos-01# show port-channel summary
+      Group  Port-channel  Protocol    Ports
+      ------+-------------+-----------+-----------------------------------------------
+      10     Po10(SU)         LACP      Eth1(P) Eth2(P)
+      20     Po20(SD)         LACP      Eth3(P) Eth4(D)
+      Flags: D - down, P - bundled, S - layer2, U - in use
+      Aggregate summary: 4 total, 2 operational, 2 down
+    expected_result:
+      aggregation:
+        total: 4
+        up: 2
+        down: 2

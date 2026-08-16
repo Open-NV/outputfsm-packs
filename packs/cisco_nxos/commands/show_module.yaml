@@ -1,0 +1,116 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_module
+  title: Cisco NX-OS — show module
+  description: Deterministic synthetic, vendor-shaped response for show module on Cisco NX-OS; not captured output.
+  license: Apache-2.0
+  synthetic: true
+  category: hardware
+spec:
+  platform: cisco_nxos
+  platform_aliases:
+  - nxos
+  - nx-os
+  - cisco-nxos
+  command: show module
+  aliases:
+  - sh module
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show module
+    modules:
+      source: inventory.hardware.modules_total
+    ok:
+      source: inventory.hardware.modules_ok
+    faulty:
+      source: inventory.hardware.faulty_modules
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}# ${command}
+    ${records}
+    Hardware summary: ${ok}/${modules} healthy, ${faulty} faulty
+  result_schema:
+  - path: hardware.modules_total
+    type: integer
+    source: inventory.hardware.modules_total
+  - path: hardware.modules_ok
+    type: integer
+    source: inventory.hardware.modules_ok
+  - path: hardware.faulty_modules
+    type: integer
+    source: inventory.hardware.faulty_modules
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-cisco-nxos-01
+      hardware:
+        modules_total: 3
+        modules_ok: 3
+        faulty_modules: 0
+      display:
+        records:
+        - Mod Ports Module-Type                         Model              Status
+        - '--- ----- ----------------------------------- ------------------ ----------'
+        - 1    48   10/25G Ethernet Module              OPENNV-N9K-48      ok
+        - 2    6    40/100G Ethernet Module            OPENNV-N9K-6       ok
+        - 27   0    Supervisor Module                   OPENNV-SUP         active *
+        - Mod  Sw              Hw      Slot
+        - 1    synthetic       1.0     LC1
+    expected_output: |
+      demo-cisco-nxos-01# show module
+      Mod Ports Module-Type                         Model              Status
+      --- ----- ----------------------------------- ------------------ ----------
+      1    48   10/25G Ethernet Module              OPENNV-N9K-48      ok
+      2    6    40/100G Ethernet Module            OPENNV-N9K-6       ok
+      27   0    Supervisor Module                   OPENNV-SUP         active *
+      Mod  Sw              Hw      Slot
+      1    synthetic       1.0     LC1
+      Hardware summary: 3/3 healthy, 0 faulty
+    expected_result:
+      hardware:
+        modules_total: 3
+        modules_ok: 3
+        faulty_modules: 0
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-cisco-nxos-01
+      hardware:
+        modules_total: 3
+        modules_ok: 2
+        faulty_modules: 1
+      display:
+        records:
+        - Mod Ports Module-Type                         Model              Status
+        - '--- ----- ----------------------------------- ------------------ ----------'
+        - 1    48   10/25G Ethernet Module              OPENNV-N9K-48      ok
+        - 2    6    40/100G Ethernet Module            OPENNV-N9K-6       faulty
+        - 27   0    Supervisor Module                   OPENNV-SUP         active *
+        - Mod  Sw              Hw      Slot
+        - 1    synthetic       1.0     LC1
+    expected_output: |
+      demo-cisco-nxos-01# show module
+      Mod Ports Module-Type                         Model              Status
+      --- ----- ----------------------------------- ------------------ ----------
+      1    48   10/25G Ethernet Module              OPENNV-N9K-48      ok
+      2    6    40/100G Ethernet Module            OPENNV-N9K-6       faulty
+      27   0    Supervisor Module                   OPENNV-SUP         active *
+      Mod  Sw              Hw      Slot
+      1    synthetic       1.0     LC1
+      Hardware summary: 2/3 healthy, 1 faulty
+    expected_result:
+      hardware:
+        modules_total: 3
+        modules_ok: 2
+        faulty_modules: 1

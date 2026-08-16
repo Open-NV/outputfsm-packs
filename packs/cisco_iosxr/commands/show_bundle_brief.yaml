@@ -1,0 +1,109 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_bundle_brief
+  title: Cisco IOS XR — show bundle brief
+  description: Deterministic synthetic, vendor-shaped response for show bundle brief on Cisco IOS XR; not captured
+    output.
+  license: Apache-2.0
+  synthetic: true
+  category: aggregation
+spec:
+  platform: cisco_iosxr
+  platform_aliases:
+  - iosxr
+  - ios-xr
+  - cisco-ios-xr
+  command: show bundle brief
+  aliases:
+  - sh bundle brief
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show bundle brief
+    total:
+      source: inventory.aggregation.total
+    up:
+      source: inventory.aggregation.up
+    down:
+      source: inventory.aggregation.down
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    RP/0/RP0/CPU0:${hostname}#${command}
+    ${records}
+    Aggregate summary: ${total} total, ${up} operational, ${down} down
+  result_schema:
+  - path: aggregation.total
+    type: integer
+    source: inventory.aggregation.total
+  - path: aggregation.up
+    type: integer
+    source: inventory.aggregation.up
+  - path: aggregation.down
+    type: integer
+    source: inventory.aggregation.down
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-cisco-iosxr-01
+      aggregation:
+        total: 4
+        up: 4
+        down: 0
+      display:
+        records:
+        - Name        Status      Links  Active  Standby  Configured BW (kbps)
+        - Bundle-Ether10 Up           2       2        0             20000000
+        - Bundle-Ether20 Up          2       2        0             20000000
+        - '  Gi0/0/0/2   Active, distributing'
+        - '  Gi0/0/0/3   Active, distributing'
+    expected_output: |
+      RP/0/RP0/CPU0:demo-cisco-iosxr-01#show bundle brief
+      Name        Status      Links  Active  Standby  Configured BW (kbps)
+      Bundle-Ether10 Up           2       2        0             20000000
+      Bundle-Ether20 Up          2       2        0             20000000
+        Gi0/0/0/2   Active, distributing
+        Gi0/0/0/3   Active, distributing
+      Aggregate summary: 4 total, 4 operational, 0 down
+    expected_result:
+      aggregation:
+        total: 4
+        up: 4
+        down: 0
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-cisco-iosxr-01
+      aggregation:
+        total: 4
+        up: 2
+        down: 2
+      display:
+        records:
+        - Name        Status      Links  Active  Standby  Configured BW (kbps)
+        - Bundle-Ether10 Up           2       2        0             20000000
+        - Bundle-Ether20 Down        2       0        0             20000000
+        - '  Gi0/0/0/2   Active, distributing'
+        - '  Gi0/0/0/3   Inactive, link down'
+    expected_output: |
+      RP/0/RP0/CPU0:demo-cisco-iosxr-01#show bundle brief
+      Name        Status      Links  Active  Standby  Configured BW (kbps)
+      Bundle-Ether10 Up           2       2        0             20000000
+      Bundle-Ether20 Down        2       0        0             20000000
+        Gi0/0/0/2   Active, distributing
+        Gi0/0/0/3   Inactive, link down
+      Aggregate summary: 4 total, 2 operational, 2 down
+    expected_result:
+      aggregation:
+        total: 4
+        up: 2
+        down: 2

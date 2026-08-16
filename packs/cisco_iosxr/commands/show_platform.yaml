@@ -1,0 +1,112 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_platform
+  title: Cisco IOS XR — show platform
+  description: Deterministic synthetic, vendor-shaped response for show platform on Cisco IOS XR; not captured output.
+  license: Apache-2.0
+  synthetic: true
+  category: hardware
+spec:
+  platform: cisco_iosxr
+  platform_aliases:
+  - iosxr
+  - ios-xr
+  - cisco-ios-xr
+  command: show platform
+  aliases:
+  - sh platform
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show platform
+    modules:
+      source: inventory.hardware.modules_total
+    ok:
+      source: inventory.hardware.modules_ok
+    faulty:
+      source: inventory.hardware.faulty_modules
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    RP/0/RP0/CPU0:${hostname}#${command}
+    ${records}
+    Hardware summary: ${ok}/${modules} healthy, ${faulty} faulty
+  result_schema:
+  - path: hardware.modules_total
+    type: integer
+    source: inventory.hardware.modules_total
+  - path: hardware.modules_ok
+    type: integer
+    source: inventory.hardware.modules_ok
+  - path: hardware.faulty_modules
+    type: integer
+    source: inventory.hardware.faulty_modules
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-cisco-iosxr-01
+      hardware:
+        modules_total: 3
+        modules_ok: 3
+        faulty_modules: 0
+      display:
+        records:
+        - Node              Type                       State             Config state
+        - '--------------------------------------------------------------------------------'
+        - 0/RP0/CPU0        OPENNV-RP                  IOS XR RUN        NSHUT
+        - 0/RP1/CPU0        OPENNV-RP                  IOS XR RUN        NSHUT
+        - 0/0/CPU0          OPENNV-LC                  IOS XR RUN        NSHUT
+        - 0/1/CPU0          OPENNV-LC                  IOS XR RUN       NSHUT
+    expected_output: |
+      RP/0/RP0/CPU0:demo-cisco-iosxr-01#show platform
+      Node              Type                       State             Config state
+      --------------------------------------------------------------------------------
+      0/RP0/CPU0        OPENNV-RP                  IOS XR RUN        NSHUT
+      0/RP1/CPU0        OPENNV-RP                  IOS XR RUN        NSHUT
+      0/0/CPU0          OPENNV-LC                  IOS XR RUN        NSHUT
+      0/1/CPU0          OPENNV-LC                  IOS XR RUN       NSHUT
+      Hardware summary: 3/3 healthy, 0 faulty
+    expected_result:
+      hardware:
+        modules_total: 3
+        modules_ok: 3
+        faulty_modules: 0
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-cisco-iosxr-01
+      hardware:
+        modules_total: 3
+        modules_ok: 2
+        faulty_modules: 1
+      display:
+        records:
+        - Node              Type                       State             Config state
+        - '--------------------------------------------------------------------------------'
+        - 0/RP0/CPU0        OPENNV-RP                  IOS XR RUN        NSHUT
+        - 0/RP1/CPU0        OPENNV-RP                  IOS XR RUN        NSHUT
+        - 0/0/CPU0          OPENNV-LC                  IOS XR RUN        NSHUT
+        - 0/1/CPU0          OPENNV-LC                  FAILED           NSHUT
+    expected_output: |
+      RP/0/RP0/CPU0:demo-cisco-iosxr-01#show platform
+      Node              Type                       State             Config state
+      --------------------------------------------------------------------------------
+      0/RP0/CPU0        OPENNV-RP                  IOS XR RUN        NSHUT
+      0/RP1/CPU0        OPENNV-RP                  IOS XR RUN        NSHUT
+      0/0/CPU0          OPENNV-LC                  IOS XR RUN        NSHUT
+      0/1/CPU0          OPENNV-LC                  FAILED           NSHUT
+      Hardware summary: 2/3 healthy, 1 faulty
+    expected_result:
+      hardware:
+        modules_total: 3
+        modules_ok: 2
+        faulty_modules: 1

@@ -1,0 +1,116 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_standby_brief
+  title: Cisco IOS — show standby brief
+  description: Deterministic synthetic, vendor-shaped response for show standby brief on Cisco IOS; not captured
+    output.
+  license: Apache-2.0
+  synthetic: true
+  category: redundancy
+spec:
+  platform: cisco_ios
+  platform_aliases:
+  - ios
+  - cisco-ios
+  command: show standby brief
+  aliases:
+  - sh standby brief
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show standby brief
+    state:
+      source: inventory.redundancy.state
+    peer:
+      source: inventory.redundancy.peer_state
+    ready:
+      generator:
+        name: yes_no
+        source: inventory.redundancy.ready
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}#${command}
+    ${records}
+    Local state: ${state}
+    Peer state: ${peer}
+    Redundancy ready: ${ready}
+  result_schema:
+  - path: redundancy.state
+    type: string
+    source: inventory.redundancy.state
+  - path: redundancy.peer_state
+    type: string
+    source: inventory.redundancy.peer_state
+  - path: redundancy.ready
+    type: boolean
+    source: inventory.redundancy.ready
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-cisco-ios-01
+      redundancy:
+        state: active
+        peer_state: standby-ready
+        ready: true
+      display:
+        records:
+        - '                     P indicates configured to preempt.'
+        - '                     |'
+        - Interface   Grp  Pri P State   Active          Standby         Virtual IP
+        - Vl100       10   110 P Active  local           10.0.0.2        10.0.0.1
+        - Vl200       20   100 P Standby10.0.1.2        local           10.0.1.1
+    expected_output: |
+      demo-cisco-ios-01#show standby brief
+                           P indicates configured to preempt.
+                           |
+      Interface   Grp  Pri P State   Active          Standby         Virtual IP
+      Vl100       10   110 P Active  local           10.0.0.2        10.0.0.1
+      Vl200       20   100 P Standby10.0.1.2        local           10.0.1.1
+      Local state: active
+      Peer state: standby-ready
+      Redundancy ready: yes
+    expected_result:
+      redundancy:
+        state: active
+        peer_state: standby-ready
+        ready: true
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-cisco-ios-01
+      redundancy:
+        state: active
+        peer_state: standby-cold
+        ready: false
+      display:
+        records:
+        - '                     P indicates configured to preempt.'
+        - '                     |'
+        - Interface   Grp  Pri P State   Active          Standby         Virtual IP
+        - Vl100       10   110 P Active  local           10.0.0.2        10.0.0.1
+        - Vl200       20   100 P Listen 10.0.1.2        unknown         10.0.1.1
+    expected_output: |
+      demo-cisco-ios-01#show standby brief
+                           P indicates configured to preempt.
+                           |
+      Interface   Grp  Pri P State   Active          Standby         Virtual IP
+      Vl100       10   110 P Active  local           10.0.0.2        10.0.0.1
+      Vl200       20   100 P Listen 10.0.1.2        unknown         10.0.1.1
+      Local state: active
+      Peer state: standby-cold
+      Redundancy ready: no
+    expected_result:
+      redundancy:
+        state: active
+        peer_state: standby-cold
+        ready: false

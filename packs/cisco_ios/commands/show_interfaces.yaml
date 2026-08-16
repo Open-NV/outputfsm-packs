@@ -1,0 +1,120 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_interfaces
+  title: Cisco IOS — show interfaces
+  description: Deterministic synthetic, vendor-shaped response for show interfaces on Cisco IOS; not captured output.
+  license: Apache-2.0
+  synthetic: true
+  category: interface_detail
+spec:
+  platform: cisco_ios
+  platform_aliases:
+  - ios
+  - cisco-ios
+  command: show interfaces
+  aliases:
+  - sh interfaces
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show interfaces
+    error_count:
+      source: inventory.interfaces.error_count
+    utilization:
+      generator:
+        name: percent
+        source: inventory.interfaces.utilization_pct
+        precision: 1
+    mtu:
+      source: inventory.interfaces.mtu
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}#${command}
+    ${records}
+      MTU ${mtu} bytes
+      Peak utilization ${utilization}
+      Aggregate input/output errors ${error_count}
+  result_schema:
+  - path: interfaces.error_count
+    type: integer
+    source: inventory.interfaces.error_count
+  - path: interfaces.utilization_pct
+    type: number
+    source: inventory.interfaces.utilization_pct
+  - path: interfaces.mtu
+    type: integer
+    source: inventory.interfaces.mtu
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-cisco-ios-01
+      interfaces:
+        error_count: 0
+        utilization_pct: 31.2
+        mtu: 1500
+      display:
+        records:
+        - Ethernet1 is up, line protocol is up
+        - '  Hardware is Ethernet, address is 0200.0000.4001 (bia 0200.0000.4001)'
+        - '  Full-duplex, 10Gb/s, media type is synthetic fiber'
+        - '  5 minute input rate 312000000 bits/sec, 39000 packets/sec'
+        - '  5 minute output rate 184000000 bits/sec, 23000 packets/sec'
+        - '  0 input errors, 0 CRC, 0 frame, 0 overrun, 0 ignored'
+    expected_output: |
+      demo-cisco-ios-01#show interfaces
+      Ethernet1 is up, line protocol is up
+        Hardware is Ethernet, address is 0200.0000.4001 (bia 0200.0000.4001)
+        Full-duplex, 10Gb/s, media type is synthetic fiber
+        5 minute input rate 312000000 bits/sec, 39000 packets/sec
+        5 minute output rate 184000000 bits/sec, 23000 packets/sec
+        0 input errors, 0 CRC, 0 frame, 0 overrun, 0 ignored
+        MTU 1500 bytes
+        Peak utilization 31.2%
+        Aggregate input/output errors 0
+    expected_result:
+      interfaces:
+        error_count: 0
+        utilization_pct: 31.2
+        mtu: 1500
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-cisco-ios-01
+      interfaces:
+        error_count: 14
+        utilization_pct: 97.8
+        mtu: 1500
+      display:
+        records:
+        - Ethernet1 is down, line protocol is down
+        - '  Hardware is Ethernet, address is 0200.0000.4001 (bia 0200.0000.4001)'
+        - '  Full-duplex, 10Gb/s, media type is synthetic fiber'
+        - '  5 minute input rate 312000000 bits/sec, 39000 packets/sec'
+        - '  5 minute output rate 184000000 bits/sec, 23000 packets/sec'
+        - '  14 input errors, 0 CRC, 0 frame, 0 overrun, 0 ignored'
+    expected_output: |
+      demo-cisco-ios-01#show interfaces
+      Ethernet1 is down, line protocol is down
+        Hardware is Ethernet, address is 0200.0000.4001 (bia 0200.0000.4001)
+        Full-duplex, 10Gb/s, media type is synthetic fiber
+        5 minute input rate 312000000 bits/sec, 39000 packets/sec
+        5 minute output rate 184000000 bits/sec, 23000 packets/sec
+        14 input errors, 0 CRC, 0 frame, 0 overrun, 0 ignored
+        MTU 1500 bytes
+        Peak utilization 97.8%
+        Aggregate input/output errors 14
+    expected_result:
+      interfaces:
+        error_count: 14
+        utilization_pct: 97.8
+        mtu: 1500

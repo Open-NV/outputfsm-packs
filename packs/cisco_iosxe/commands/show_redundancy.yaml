@@ -1,0 +1,121 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_redundancy
+  title: Cisco IOS XE — show redundancy
+  description: Deterministic synthetic, vendor-shaped response for show redundancy on Cisco IOS XE; not captured
+    output.
+  license: Apache-2.0
+  synthetic: true
+  category: redundancy
+spec:
+  platform: cisco_iosxe
+  platform_aliases:
+  - iosxe
+  - ios-xe
+  - cisco-ios-xe
+  command: show redundancy
+  aliases:
+  - sh redundancy
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show redundancy
+    state:
+      source: inventory.redundancy.state
+    peer:
+      source: inventory.redundancy.peer_state
+    ready:
+      generator:
+        name: yes_no
+        source: inventory.redundancy.ready
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}#${command}
+    ${records}
+    Local state: ${state}
+    Peer state: ${peer}
+    Redundancy ready: ${ready}
+  result_schema:
+  - path: redundancy.state
+    type: string
+    source: inventory.redundancy.state
+  - path: redundancy.peer_state
+    type: string
+    source: inventory.redundancy.peer_state
+  - path: redundancy.ready
+    type: boolean
+    source: inventory.redundancy.ready
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-cisco-iosxe-01
+      redundancy:
+        state: active
+        peer_state: standby-ready
+        ready: true
+      display:
+        records:
+        - 'Redundant System Information :'
+        - '------------------------------'
+        - Available system uptime = 4 weeks, 2 days, 1 hour
+        - Switchovers system experienced = 0
+        - 'Current Processor Information : Active'
+        - 'Peer Processor Information    : Standby hot'
+    expected_output: |
+      demo-cisco-iosxe-01#show redundancy
+      Redundant System Information :
+      ------------------------------
+      Available system uptime = 4 weeks, 2 days, 1 hour
+      Switchovers system experienced = 0
+      Current Processor Information : Active
+      Peer Processor Information    : Standby hot
+      Local state: active
+      Peer state: standby-ready
+      Redundancy ready: yes
+    expected_result:
+      redundancy:
+        state: active
+        peer_state: standby-ready
+        ready: true
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-cisco-iosxe-01
+      redundancy:
+        state: active
+        peer_state: standby-cold
+        ready: false
+      display:
+        records:
+        - 'Redundant System Information :'
+        - '------------------------------'
+        - Available system uptime = 4 weeks, 2 days, 1 hour
+        - Switchovers system experienced = 0
+        - 'Current Processor Information : Active'
+        - 'Peer Processor Information    : Standby cold'
+    expected_output: |
+      demo-cisco-iosxe-01#show redundancy
+      Redundant System Information :
+      ------------------------------
+      Available system uptime = 4 weeks, 2 days, 1 hour
+      Switchovers system experienced = 0
+      Current Processor Information : Active
+      Peer Processor Information    : Standby cold
+      Local state: active
+      Peer state: standby-cold
+      Redundancy ready: no
+    expected_result:
+      redundancy:
+        state: active
+        peer_state: standby-cold
+        ready: false

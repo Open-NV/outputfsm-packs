@@ -1,0 +1,116 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_system_commit
+  title: Juniper Junos — show system commit
+  description: Deterministic synthetic, vendor-shaped response for show system commit on Juniper Junos; not captured
+    output.
+  license: Apache-2.0
+  synthetic: true
+  category: config_state
+spec:
+  platform: juniper_junos
+  platform_aliases:
+  - junos
+  - juniper-junos
+  command: show system commit
+  aliases:
+  - sh system commit
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show system commit
+    clean:
+      generator:
+        name: yes_no
+        source: inventory.config.clean
+    change:
+      source: inventory.config.last_change_id
+    age:
+      source: inventory.config.age_minutes
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}> ${command}
+    ${records}
+    Configuration clean: ${clean}
+    Last change: ${change}
+    Configuration age: ${age} minutes
+  result_schema:
+  - path: config.clean
+    type: boolean
+    source: inventory.config.clean
+  - path: config.last_change_id
+    type: string
+    source: inventory.config.last_change_id
+  - path: config.age_minutes
+    type: integer
+    source: inventory.config.age_minutes
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-juniper-junos-01
+      config:
+        clean: true
+        last_change_id: demo-change-0042
+        age_minutes: 19
+      display:
+        records:
+        - 0   2026-08-16 06:41:22 UTC by opennv-fixture via cli
+        - '    commit confirmed, synthetic baseline'
+        - 1   2026-08-16 06:58:10 UTC by opennv-fixture via cli
+        - '    health policy update'
+        - 2   2026-08-15 18:04:02 UTC by opennv-fixture via netconf
+    expected_output: |
+      demo-juniper-junos-01> show system commit
+      0   2026-08-16 06:41:22 UTC by opennv-fixture via cli
+          commit confirmed, synthetic baseline
+      1   2026-08-16 06:58:10 UTC by opennv-fixture via cli
+          health policy update
+      2   2026-08-15 18:04:02 UTC by opennv-fixture via netconf
+      Configuration clean: yes
+      Last change: demo-change-0042
+      Configuration age: 19 minutes
+    expected_result:
+      config:
+        clean: true
+        last_change_id: demo-change-0042
+        age_minutes: 19
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-juniper-junos-01
+      config:
+        clean: false
+        last_change_id: demo-change-pending
+        age_minutes: 2
+      display:
+        records:
+        - 0   2026-08-16 06:41:22 UTC by opennv-fixture via cli
+        - '    commit confirmed, synthetic baseline'
+        - 1   2026-08-16 06:58:10 UTC by opennv-fixture via cli (pending)
+        - '    candidate change awaiting confirmation'
+        - 2   2026-08-15 18:04:02 UTC by opennv-fixture via netconf
+    expected_output: |
+      demo-juniper-junos-01> show system commit
+      0   2026-08-16 06:41:22 UTC by opennv-fixture via cli
+          commit confirmed, synthetic baseline
+      1   2026-08-16 06:58:10 UTC by opennv-fixture via cli (pending)
+          candidate change awaiting confirmation
+      2   2026-08-15 18:04:02 UTC by opennv-fixture via netconf
+      Configuration clean: no
+      Last change: demo-change-pending
+      Configuration age: 2 minutes
+    expected_result:
+      config:
+        clean: false
+        last_change_id: demo-change-pending
+        age_minutes: 2

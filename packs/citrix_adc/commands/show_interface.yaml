@@ -1,0 +1,111 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_interface
+  title: Citrix ADC / NetScaler — show interface
+  description: Deterministic synthetic, vendor-shaped response for show interface on Citrix ADC / NetScaler; not
+    captured output.
+  license: Apache-2.0
+  synthetic: true
+  category: interface_summary
+spec:
+  platform: citrix_adc
+  platform_aliases:
+  - citrix
+  - netscaler
+  - citrix-adc
+  command: show interface
+  aliases:
+  - sh interface
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show interface
+    total:
+      source: inventory.interfaces.total
+    up:
+      source: inventory.interfaces.up
+    down:
+      source: inventory.interfaces.down
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    > ${command}
+    Interface summary
+    ID   Admin Link    Speed  Duplex MAC
+    ${records}
+    Summary: ${total} interfaces, ${up} up, ${down} down
+  result_schema:
+  - path: interfaces.total
+    type: integer
+    source: inventory.interfaces.total
+  - path: interfaces.up
+    type: integer
+    source: inventory.interfaces.up
+  - path: interfaces.down
+    type: integer
+    source: inventory.interfaces.down
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-citrix-adc-01
+      interfaces:
+        total: 48
+        up: 47
+        down: 1
+      display:
+        records:
+        - 1/1  UP    UP      10000  FULL  02:00:00:00:10:01
+        - 1/2  UP    UP      10000  FULL  02:00:00:00:10:02
+        - 0/1  UP    UP       1000  FULL  02:00:00:00:10:ff
+        - LA/1 UP    UP      20000  FULL  02:00:00:00:10:10
+    expected_output: |
+      > show interface
+      Interface summary
+      ID   Admin Link    Speed  Duplex MAC
+      1/1  UP    UP      10000  FULL  02:00:00:00:10:01
+      1/2  UP    UP      10000  FULL  02:00:00:00:10:02
+      0/1  UP    UP       1000  FULL  02:00:00:00:10:ff
+      LA/1 UP    UP      20000  FULL  02:00:00:00:10:10
+      Summary: 48 interfaces, 47 up, 1 down
+    expected_result:
+      interfaces:
+        total: 48
+        up: 47
+        down: 1
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-citrix-adc-01
+      interfaces:
+        total: 48
+        up: 42
+        down: 6
+      display:
+        records:
+        - 1/1  UP    UP      10000  FULL  02:00:00:00:10:01
+        - 1/2  UP    DOWN    10000  FULL  02:00:00:00:10:02
+        - 0/1  UP    UP       1000  FULL  02:00:00:00:10:ff
+        - LA/1 UP    UP      20000  FULL  02:00:00:00:10:10
+    expected_output: |
+      > show interface
+      Interface summary
+      ID   Admin Link    Speed  Duplex MAC
+      1/1  UP    UP      10000  FULL  02:00:00:00:10:01
+      1/2  UP    DOWN    10000  FULL  02:00:00:00:10:02
+      0/1  UP    UP       1000  FULL  02:00:00:00:10:ff
+      LA/1 UP    UP      20000  FULL  02:00:00:00:10:10
+      Summary: 48 interfaces, 42 up, 6 down
+    expected_result:
+      interfaces:
+        total: 48
+        up: 42
+        down: 6

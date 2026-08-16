@@ -1,0 +1,111 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_sys_memory
+  title: F5 BIG-IP TMOS — show sys memory
+  description: Deterministic synthetic, vendor-shaped response for show sys memory on F5 BIG-IP TMOS; not captured
+    output.
+  license: Apache-2.0
+  synthetic: true
+  category: memory
+spec:
+  platform: f5_tmos
+  platform_aliases:
+  - f5
+  - bigip
+  - big-ip
+  - tmos
+  command: show sys memory
+  aliases:
+  - sh sys memory
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show sys memory
+    memory:
+      generator:
+        name: percent
+        source: inventory.resources.memory_used_pct
+        precision: 1
+    free_mb:
+      source: inventory.resources.memory_free_mb
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}(active)(/Common)(tmos)# ${command}
+    ${records}
+    Memory used: ${memory}
+    Memory free: ${free_mb} MB
+  result_schema:
+  - path: resources.memory_used_pct
+    type: number
+    source: inventory.resources.memory_used_pct
+  - path: resources.memory_free_mb
+    type: integer
+    source: inventory.resources.memory_free_mb
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-f5-tmos-01
+      resources:
+        memory_used_pct: 48.7
+        memory_free_mb: 4096
+      display:
+        records:
+        - Sys::Memory
+        - Memory                         Total   Used    Free    Used%
+        - Host memory                    8192M   3990   4096M    48.7%
+        - TMM memory                     4096M   2048M   2048M   50.0%
+        - Swap                           2048M   0M      2048M    0.0%
+        - Provisioning warning           none
+    expected_output: |
+      demo-f5-tmos-01(active)(/Common)(tmos)# show sys memory
+      Sys::Memory
+      Memory                         Total   Used    Free    Used%
+      Host memory                    8192M   3990   4096M    48.7%
+      TMM memory                     4096M   2048M   2048M   50.0%
+      Swap                           2048M   0M      2048M    0.0%
+      Provisioning warning           none
+      Memory used: 48.7%
+      Memory free: 4096 MB
+    expected_result:
+      resources:
+        memory_used_pct: 48.7
+        memory_free_mb: 4096
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-f5-tmos-01
+      resources:
+        memory_used_pct: 97.0
+        memory_free_mb: 128
+      display:
+        records:
+        - Sys::Memory
+        - Memory                         Total   Used    Free    Used%
+        - Host memory                    8192M   8064   128M    97.0%
+        - TMM memory                     4096M   2048M   2048M   50.0%
+        - Swap                           2048M   0M      2048M    0.0%
+        - Provisioning warning           critical
+    expected_output: |
+      demo-f5-tmos-01(active)(/Common)(tmos)# show sys memory
+      Sys::Memory
+      Memory                         Total   Used    Free    Used%
+      Host memory                    8192M   8064   128M    97.0%
+      TMM memory                     4096M   2048M   2048M   50.0%
+      Swap                           2048M   0M      2048M    0.0%
+      Provisioning warning           critical
+      Memory used: 97.0%
+      Memory free: 128 MB
+    expected_result:
+      resources:
+        memory_used_pct: 97.0
+        memory_free_mb: 128

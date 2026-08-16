@@ -1,0 +1,114 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_chassis_alarms
+  title: Juniper Junos — show chassis alarms
+  description: Deterministic synthetic, vendor-shaped response for show chassis alarms on Juniper Junos; not captured
+    output.
+  license: Apache-2.0
+  synthetic: true
+  category: health
+spec:
+  platform: juniper_junos
+  platform_aliases:
+  - junos
+  - juniper-junos
+  command: show chassis alarms
+  aliases:
+  - sh chassis alarms
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show chassis alarms
+    score:
+      source: inventory.health.score
+    status:
+      source: inventory.health.status
+    open_alerts:
+      source: inventory.health.open_alerts
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}> ${command}
+    ${records}
+    Health status: ${status}
+    Health score: ${score}
+    Open alerts: ${open_alerts}
+  result_schema:
+  - path: health.score
+    type: integer
+    source: inventory.health.score
+  - path: health.status
+    type: string
+    source: inventory.health.status
+  - path: health.open_alerts
+    type: integer
+    source: inventory.health.open_alerts
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-juniper-junos-01
+      health:
+        score: 97
+        status: healthy
+        open_alerts: 0
+      display:
+        records:
+        - 0 alarms currently active
+        - Alarm time               Class  Description
+        - 2026-08-16 07:00:07 UTC  Info   No active chassis alarms
+        - 'Craft interface alarm LED: off'
+        - 'Chassis health: healthy'
+    expected_output: |
+      demo-juniper-junos-01> show chassis alarms
+      0 alarms currently active
+      Alarm time               Class  Description
+      2026-08-16 07:00:07 UTC  Info   No active chassis alarms
+      Craft interface alarm LED: off
+      Chassis health: healthy
+      Health status: healthy
+      Health score: 97
+      Open alerts: 0
+    expected_result:
+      health:
+        score: 97
+        status: healthy
+        open_alerts: 0
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-juniper-junos-01
+      health:
+        score: 44
+        status: critical
+        open_alerts: 7
+      display:
+        records:
+        - 7 alarms currently active
+        - Alarm time               Class  Description
+        - 2026-08-16 07:00:07 UTC  Major  FPC 0 temperature threshold exceeded
+        - 'Craft interface alarm LED: red'
+        - 'Chassis health: critical'
+    expected_output: |
+      demo-juniper-junos-01> show chassis alarms
+      7 alarms currently active
+      Alarm time               Class  Description
+      2026-08-16 07:00:07 UTC  Major  FPC 0 temperature threshold exceeded
+      Craft interface alarm LED: red
+      Chassis health: critical
+      Health status: critical
+      Health score: 44
+      Open alerts: 7
+    expected_result:
+      health:
+        score: 44
+        status: critical
+        open_alerts: 7

@@ -1,0 +1,113 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_service
+  title: Citrix ADC / NetScaler — show service
+  description: Deterministic synthetic, vendor-shaped response for show service on Citrix ADC / NetScaler; not captured
+    output.
+  license: Apache-2.0
+  synthetic: true
+  category: lb_member
+spec:
+  platform: citrix_adc
+  platform_aliases:
+  - citrix
+  - netscaler
+  - citrix-adc
+  command: show service
+  aliases:
+  - sh service
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show service
+    members:
+      source: inventory.load_balancing.members
+    up:
+      source: inventory.load_balancing.members_up
+    down:
+      source: inventory.load_balancing.members_down
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    > ${command}
+    ${records}
+    Member summary: ${up}/${members} up, ${down} down
+  result_schema:
+  - path: load_balancing.members
+    type: integer
+    source: inventory.load_balancing.members
+  - path: load_balancing.members_up
+    type: integer
+    source: inventory.load_balancing.members_up
+  - path: load_balancing.members_down
+    type: integer
+    source: inventory.load_balancing.members_down
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-citrix-adc-01
+      load_balancing:
+        members: 32
+        members_up: 31
+        members_down: 1
+      display:
+        records:
+        - 1) service app-member-01 10.0.0.20 HTTP 8080
+        - '   State: UP, Effective State: UP'
+        - '   Health: 100, Monitor State: UP'
+        - 2) synthetic secondary object
+        - '   State: UP, Effective State: UP, Health: 100'
+        - Done
+    expected_output: |
+      > show service
+      1) service app-member-01 10.0.0.20 HTTP 8080
+         State: UP, Effective State: UP
+         Health: 100, Monitor State: UP
+      2) synthetic secondary object
+         State: UP, Effective State: UP, Health: 100
+      Done
+      Member summary: 31/32 up, 1 down
+    expected_result:
+      load_balancing:
+        members: 32
+        members_up: 31
+        members_down: 1
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-citrix-adc-01
+      load_balancing:
+        members: 32
+        members_up: 26
+        members_down: 6
+      display:
+        records:
+        - 1) service app-member-01 10.0.0.20 HTTP 8080
+        - '   State: DOWN, Effective State: DOWN'
+        - '   Health: 0, Monitor State: FAILED'
+        - 2) synthetic secondary object
+        - '   State: UP, Effective State: UP, Health: 100'
+        - Done
+    expected_output: |
+      > show service
+      1) service app-member-01 10.0.0.20 HTTP 8080
+         State: DOWN, Effective State: DOWN
+         Health: 0, Monitor State: FAILED
+      2) synthetic secondary object
+         State: UP, Effective State: UP, Health: 100
+      Done
+      Member summary: 26/32 up, 6 down
+    expected_result:
+      load_balancing:
+        members: 32
+        members_up: 26
+        members_down: 6

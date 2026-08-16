@@ -1,0 +1,117 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_configuration_commit_list
+  title: Cisco IOS XR — show configuration commit list
+  description: Deterministic synthetic, vendor-shaped response for show configuration commit list on Cisco IOS XR;
+    not captured output.
+  license: Apache-2.0
+  synthetic: true
+  category: config_state
+spec:
+  platform: cisco_iosxr
+  platform_aliases:
+  - iosxr
+  - ios-xr
+  - cisco-ios-xr
+  command: show configuration commit list
+  aliases:
+  - sh configuration commit list
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show configuration commit list
+    clean:
+      generator:
+        name: yes_no
+        source: inventory.config.clean
+    change:
+      source: inventory.config.last_change_id
+    age:
+      source: inventory.config.age_minutes
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    RP/0/RP0/CPU0:${hostname}#${command}
+    ${records}
+    Configuration clean: ${clean}
+    Last change: ${change}
+    Configuration age: ${age} minutes
+  result_schema:
+  - path: config.clean
+    type: boolean
+    source: inventory.config.clean
+  - path: config.last_change_id
+    type: string
+    source: inventory.config.last_change_id
+  - path: config.age_minutes
+    type: integer
+    source: inventory.config.age_minutes
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-cisco-iosxr-01
+      config:
+        clean: true
+        last_change_id: demo-change-0042
+        age_minutes: 19
+      display:
+        records:
+        - Configuration state
+        - '  Candidate differs from running: no'
+        - '  Last operation: demo-change-0042'
+        - '  User: opennv-fixture'
+        - '  Commit status: complete'
+    expected_output: |
+      RP/0/RP0/CPU0:demo-cisco-iosxr-01#show configuration commit list
+      Configuration state
+        Candidate differs from running: no
+        Last operation: demo-change-0042
+        User: opennv-fixture
+        Commit status: complete
+      Configuration clean: yes
+      Last change: demo-change-0042
+      Configuration age: 19 minutes
+    expected_result:
+      config:
+        clean: true
+        last_change_id: demo-change-0042
+        age_minutes: 19
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-cisco-iosxr-01
+      config:
+        clean: false
+        last_change_id: demo-change-pending
+        age_minutes: 2
+      display:
+        records:
+        - Configuration state
+        - '  Candidate differs from running: yes'
+        - '  Last operation: demo-change-pending'
+        - '  User: opennv-fixture'
+        - '  Commit status: pending'
+    expected_output: |
+      RP/0/RP0/CPU0:demo-cisco-iosxr-01#show configuration commit list
+      Configuration state
+        Candidate differs from running: yes
+        Last operation: demo-change-pending
+        User: opennv-fixture
+        Commit status: pending
+      Configuration clean: no
+      Last change: demo-change-pending
+      Configuration age: 2 minutes
+    expected_result:
+      config:
+        clean: false
+        last_change_id: demo-change-pending
+        age_minutes: 2

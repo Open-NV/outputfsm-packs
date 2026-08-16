@@ -1,0 +1,282 @@
+id: arista_eos
+name: Arista EOS
+aliases:
+- eos
+- arista-eos
+commands:
+- id: show_version
+  command: show version
+  aliases:
+  - sh version
+  definition: packs/arista_eos/commands/show_version.yaml
+  result_paths:
+  - system.os_version
+  - system.image
+  - system.uptime_seconds
+  - system.oper_state
+  validation_hint:
+    path: system.oper_state
+    operator: eq
+    expected: up
+    failure_example: down
+- id: show_ip_interface_brief
+  command: show ip interface brief
+  aliases:
+  - sh ip interface brief
+  definition: packs/arista_eos/commands/show_ip_interface_brief.yaml
+  result_paths:
+  - interfaces.total
+  - interfaces.up
+  - interfaces.down
+  validation_hint:
+    path: interfaces.down
+    operator: lte
+    expected: 1
+    failure_example: 6
+- id: show_interfaces
+  command: show interfaces
+  aliases:
+  - sh interfaces
+  definition: packs/arista_eos/commands/show_interfaces.yaml
+  result_paths:
+  - interfaces.error_count
+  - interfaces.utilization_pct
+  - interfaces.mtu
+  validation_hint:
+    path: interfaces.error_count
+    operator: lte
+    expected: 0
+    failure_example: 14
+- id: show_ip_route
+  command: show ip route
+  aliases:
+  - sh ip route
+  definition: packs/arista_eos/commands/show_ip_route.yaml
+  result_paths:
+  - routes.total
+  - routes.default_present
+  - routes.stale
+  validation_hint:
+    path: routes.default_present
+    operator: eq
+    expected: true
+    failure_example: false
+- id: show_ip_arp
+  command: show ip arp
+  aliases:
+  - sh ip arp
+  definition: packs/arista_eos/commands/show_ip_arp.yaml
+  result_paths:
+  - arp.entries
+  - arp.incomplete
+  validation_hint:
+    path: arp.incomplete
+    operator: eq
+    expected: 0
+    failure_example: 5
+- id: show_mac_address_table
+  command: show mac address-table
+  aliases:
+  - sh mac address-table
+  definition: packs/arista_eos/commands/show_mac_address_table.yaml
+  result_paths:
+  - mac.entries
+  - mac.dynamic
+  validation_hint:
+    path: mac.entries
+    operator: gte
+    expected: 1
+    failure_example: 0
+- id: show_lldp_neighbors_detail
+  command: show lldp neighbors detail
+  aliases:
+  - sh lldp neighbors detail
+  definition: packs/arista_eos/commands/show_lldp_neighbors_detail.yaml
+  result_paths:
+  - neighbors.count
+  - neighbors.expected_count
+  - neighbors.expected_matches
+  validation_hint:
+    path: neighbors.expected_matches
+    operator: eq
+    expected: true
+    failure_example: false
+- id: show_vlan
+  command: show vlan
+  aliases:
+  - sh vlan
+  definition: packs/arista_eos/commands/show_vlan.yaml
+  result_paths:
+  - vlans.total
+  - vlans.active
+  validation_hint:
+    path: vlans.active
+    operator: gte
+    expected: 1
+    failure_example: 0
+- id: show_port_channel_summary
+  command: show port-channel summary
+  aliases:
+  - sh port-channel summary
+  definition: packs/arista_eos/commands/show_port_channel_summary.yaml
+  result_paths:
+  - aggregation.total
+  - aggregation.up
+  - aggregation.down
+  validation_hint:
+    path: aggregation.down
+    operator: eq
+    expected: 0
+    failure_example: 2
+- id: show_ip_bgp_summary
+  command: show ip bgp summary
+  aliases:
+  - sh ip bgp summary
+  definition: packs/arista_eos/commands/show_ip_bgp_summary.yaml
+  result_paths:
+  - routing.peers_total
+  - routing.peers_established
+  - routing.established_ratio_pct
+  validation_hint:
+    path: routing.established_ratio_pct
+    operator: gte
+    expected: 95
+    failure_example: 62.5
+- id: show_ip_ospf_neighbor
+  command: show ip ospf neighbor
+  aliases:
+  - sh ip ospf neighbor
+  definition: packs/arista_eos/commands/show_ip_ospf_neighbor.yaml
+  result_paths:
+  - routing.peers_total
+  - routing.peers_established
+  - routing.established_ratio_pct
+  validation_hint:
+    path: routing.established_ratio_pct
+    operator: gte
+    expected: 95
+    failure_example: 62.5
+- id: show_mlag
+  command: show mlag
+  aliases:
+  - sh mlag
+  definition: packs/arista_eos/commands/show_mlag.yaml
+  result_paths:
+  - redundancy.state
+  - redundancy.peer_state
+  - redundancy.ready
+  validation_hint:
+    path: redundancy.ready
+    operator: eq
+    expected: true
+    failure_example: false
+- id: show_inventory
+  command: show inventory
+  aliases:
+  - sh inventory
+  definition: packs/arista_eos/commands/show_inventory.yaml
+  result_paths:
+  - inventory.components
+  - inventory.missing_serials
+  - inventory.chassis_serial
+  validation_hint:
+    path: inventory.missing_serials
+    operator: eq
+    expected: 0
+    failure_example: 2
+- id: show_environment_all
+  command: show environment all
+  aliases:
+  - sh environment all
+  definition: packs/arista_eos/commands/show_environment_all.yaml
+  result_paths:
+  - environment.temp_c
+  - environment.fans_ok
+  - environment.psus_ok
+  validation_hint:
+    path: environment.temp_c
+    operator: lte
+    expected: 75
+    failure_example: 93.0
+- id: show_processes_top_once
+  command: show processes top once
+  aliases:
+  - sh processes top once
+  definition: packs/arista_eos/commands/show_processes_top_once.yaml
+  result_paths:
+  - resources.cpu_pct
+  - resources.load_5m
+  validation_hint:
+    path: resources.cpu_pct
+    operator: lte
+    expected: 80
+    failure_example: 98.1
+- id: show_system_resources
+  command: show system resources
+  aliases:
+  - sh system resources
+  definition: packs/arista_eos/commands/show_system_resources.yaml
+  result_paths:
+  - resources.memory_used_pct
+  - resources.memory_free_mb
+  validation_hint:
+    path: resources.memory_used_pct
+    operator: lte
+    expected: 85
+    failure_example: 97.0
+- id: show_logging_last_50
+  command: show logging last 50
+  aliases:
+  - sh logging last 50
+  definition: packs/arista_eos/commands/show_logging_last_50.yaml
+  result_paths:
+  - logging.critical_count
+  - logging.warning_count
+  - logging.last_event
+  validation_hint:
+    path: logging.critical_count
+    operator: eq
+    expected: 0
+    failure_example: 4
+- id: show_clock
+  command: show clock
+  aliases:
+  - sh clock
+  definition: packs/arista_eos/commands/show_clock.yaml
+  result_paths:
+  - clock.iso8601
+  - clock.synced
+  - clock.offset_ms
+  validation_hint:
+    path: clock.synced
+    operator: eq
+    expected: true
+    failure_example: false
+- id: show_running_config_hostname
+  command: show running-config | include hostname
+  aliases:
+  - sh running-config | include hostname
+  definition: packs/arista_eos/commands/show_running_config_hostname.yaml
+  result_paths:
+  - config.clean
+  - config.last_change_id
+  - config.age_minutes
+  validation_hint:
+    path: config.clean
+    operator: eq
+    expected: true
+    failure_example: false
+- id: show_platform
+  command: show platform
+  aliases:
+  - sh platform
+  definition: packs/arista_eos/commands/show_platform.yaml
+  result_paths:
+  - hardware.modules_total
+  - hardware.modules_ok
+  - hardware.faulty_modules
+  validation_hint:
+    path: hardware.faulty_modules
+    operator: eq
+    expected: 0
+    failure_example: 1

@@ -1,0 +1,103 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_arp
+  title: Citrix ADC / NetScaler — show arp
+  description: Deterministic synthetic, vendor-shaped response for show arp on Citrix ADC / NetScaler; not captured
+    output.
+  license: Apache-2.0
+  synthetic: true
+  category: arp
+spec:
+  platform: citrix_adc
+  platform_aliases:
+  - citrix
+  - netscaler
+  - citrix-adc
+  command: show arp
+  aliases:
+  - sh arp
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show arp
+    entries:
+      source: inventory.arp.entries
+    incomplete:
+      source: inventory.arp.incomplete
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    > ${command}
+    ${records}
+    Total entries: ${entries}
+    Incomplete entries: ${incomplete}
+  result_schema:
+  - path: arp.entries
+    type: integer
+    source: inventory.arp.entries
+  - path: arp.incomplete
+    type: integer
+    source: inventory.arp.incomplete
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-citrix-adc-01
+      arp:
+        entries: 96
+        incomplete: 0
+      display:
+        records:
+        - '1) IP: 192.0.2.2, MAC: 02:00:00:00:50:01, VLAN: 100, Interface: 1/1'
+        - '2) IP: 10.0.0.20, MAC: 02:00:00:00:50:02, VLAN: 200, Interface: 1/2'
+        - '3) IP: 198.51.100.2, MAC: (incomplete), VLAN: 300, Interface: 1/3'
+        - 'Flags: DYNAMIC'
+        - Done
+    expected_output: |
+      > show arp
+      1) IP: 192.0.2.2, MAC: 02:00:00:00:50:01, VLAN: 100, Interface: 1/1
+      2) IP: 10.0.0.20, MAC: 02:00:00:00:50:02, VLAN: 200, Interface: 1/2
+      3) IP: 198.51.100.2, MAC: (incomplete), VLAN: 300, Interface: 1/3
+      Flags: DYNAMIC
+      Done
+      Total entries: 96
+      Incomplete entries: 0
+    expected_result:
+      arp:
+        entries: 96
+        incomplete: 0
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-citrix-adc-01
+      arp:
+        entries: 96
+        incomplete: 5
+      display:
+        records:
+        - '1) IP: 192.0.2.2, MAC: 02:00:00:00:50:01, VLAN: 100, Interface: 1/1'
+        - '2) IP: 10.0.0.20, MAC: 02:00:00:00:50:02, VLAN: 200, Interface: 1/2'
+        - '3) IP: 198.51.100.2, MAC: (incomplete), VLAN: 300, Interface: 1/3'
+        - 'Flags: DYNAMIC'
+        - Done
+    expected_output: |
+      > show arp
+      1) IP: 192.0.2.2, MAC: 02:00:00:00:50:01, VLAN: 100, Interface: 1/1
+      2) IP: 10.0.0.20, MAC: 02:00:00:00:50:02, VLAN: 200, Interface: 1/2
+      3) IP: 198.51.100.2, MAC: (incomplete), VLAN: 300, Interface: 1/3
+      Flags: DYNAMIC
+      Done
+      Total entries: 96
+      Incomplete entries: 5
+    expected_result:
+      arp:
+        entries: 96
+        incomplete: 5

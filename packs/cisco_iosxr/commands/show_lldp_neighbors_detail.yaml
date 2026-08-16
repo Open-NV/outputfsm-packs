@@ -1,0 +1,125 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_lldp_neighbors_detail
+  title: Cisco IOS XR — show lldp neighbors detail
+  description: Deterministic synthetic, vendor-shaped response for show lldp neighbors detail on Cisco IOS XR; not
+    captured output.
+  license: Apache-2.0
+  synthetic: true
+  category: neighbors
+spec:
+  platform: cisco_iosxr
+  platform_aliases:
+  - iosxr
+  - ios-xr
+  - cisco-ios-xr
+  command: show lldp neighbors detail
+  aliases:
+  - sh lldp neighbors detail
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show lldp neighbors detail
+    count:
+      source: inventory.neighbors.count
+    expected:
+      source: inventory.neighbors.expected_count
+    expected_matches:
+      generator:
+        name: yes_no
+        source: inventory.neighbors.expected_matches
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    RP/0/RP0/CPU0:${hostname}#${command}
+    ${records}
+    Total entries displayed: ${count}
+    Expected entries: ${expected}
+    Expected set matched: ${expected_matches}
+  result_schema:
+  - path: neighbors.count
+    type: integer
+    source: inventory.neighbors.count
+  - path: neighbors.expected_count
+    type: integer
+    source: inventory.neighbors.expected_count
+  - path: neighbors.expected_matches
+    type: boolean
+    source: inventory.neighbors.expected_matches
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-cisco-iosxr-01
+      neighbors:
+        count: 6
+        expected_count: 6
+        expected_matches: true
+      display:
+        records:
+        - LLDP neighbor detail for synthetic topology
+        - '------------------------------------------------'
+        - 'Device ID: leaf-02.example.invalid'
+        - '  Local Interface: Ethernet1, Port ID: Ethernet49'
+        - '  Management Address: 192.0.2.22, Capability: Bridge Router'
+        - 'Device ID: border-01.example.invalid'
+        - '  Local Interface: Ethernet2, Port ID: Ethernet1, State: up'
+    expected_output: |
+      RP/0/RP0/CPU0:demo-cisco-iosxr-01#show lldp neighbors detail
+      LLDP neighbor detail for synthetic topology
+      ------------------------------------------------
+      Device ID: leaf-02.example.invalid
+        Local Interface: Ethernet1, Port ID: Ethernet49
+        Management Address: 192.0.2.22, Capability: Bridge Router
+      Device ID: border-01.example.invalid
+        Local Interface: Ethernet2, Port ID: Ethernet1, State: up
+      Total entries displayed: 6
+      Expected entries: 6
+      Expected set matched: yes
+    expected_result:
+      neighbors:
+        count: 6
+        expected_count: 6
+        expected_matches: true
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-cisco-iosxr-01
+      neighbors:
+        count: 4
+        expected_count: 6
+        expected_matches: false
+      display:
+        records:
+        - LLDP neighbor detail for synthetic topology
+        - '------------------------------------------------'
+        - 'Device ID: leaf-02.example.invalid'
+        - '  Local Interface: Ethernet1, Port ID: Ethernet49'
+        - '  Management Address: 192.0.2.22, Capability: Bridge Router'
+        - 'Device ID: border-01.example.invalid'
+        - '  Local Interface: Ethernet2, Port ID: Ethernet1, State: down'
+    expected_output: |
+      RP/0/RP0/CPU0:demo-cisco-iosxr-01#show lldp neighbors detail
+      LLDP neighbor detail for synthetic topology
+      ------------------------------------------------
+      Device ID: leaf-02.example.invalid
+        Local Interface: Ethernet1, Port ID: Ethernet49
+        Management Address: 192.0.2.22, Capability: Bridge Router
+      Device ID: border-01.example.invalid
+        Local Interface: Ethernet2, Port ID: Ethernet1, State: down
+      Total entries displayed: 4
+      Expected entries: 6
+      Expected set matched: no
+    expected_result:
+      neighbors:
+        count: 4
+        expected_count: 6
+        expected_matches: false

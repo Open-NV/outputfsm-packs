@@ -1,0 +1,100 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_vlan
+  title: Citrix ADC / NetScaler — show vlan
+  description: Deterministic synthetic, vendor-shaped response for show vlan on Citrix ADC / NetScaler; not captured
+    output.
+  license: Apache-2.0
+  synthetic: true
+  category: vlans
+spec:
+  platform: citrix_adc
+  platform_aliases:
+  - citrix
+  - netscaler
+  - citrix-adc
+  command: show vlan
+  aliases:
+  - sh vlan
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show vlan
+    total:
+      source: inventory.vlans.total
+    active:
+      source: inventory.vlans.active
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    > ${command}
+    ${records}
+    VLAN summary: ${total} defined, ${active} active
+  result_schema:
+  - path: vlans.total
+    type: integer
+    source: inventory.vlans.total
+  - path: vlans.active
+    type: integer
+    source: inventory.vlans.active
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-citrix-adc-01
+      vlans:
+        total: 24
+        active: 24
+      display:
+        records:
+        - '1) VLAN ID: 100, Alias Name: external'
+        - '   Interfaces: 1/1, LA/1; IPs: 192.0.2.10'
+        - '2) VLAN ID: 200, Alias Name: server'
+        - '   Interfaces: 1/2, LA/2; IPs: 10.0.0.10'
+        - Done
+    expected_output: |
+      > show vlan
+      1) VLAN ID: 100, Alias Name: external
+         Interfaces: 1/1, LA/1; IPs: 192.0.2.10
+      2) VLAN ID: 200, Alias Name: server
+         Interfaces: 1/2, LA/2; IPs: 10.0.0.10
+      Done
+      VLAN summary: 24 defined, 24 active
+    expected_result:
+      vlans:
+        total: 24
+        active: 24
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-citrix-adc-01
+      vlans:
+        total: 24
+        active: 0
+      display:
+        records:
+        - '1) VLAN ID: 100, Alias Name: external'
+        - '   Interfaces: none; IPs: 192.0.2.10'
+        - '2) VLAN ID: 200, Alias Name: server'
+        - '   Interfaces: none; IPs: 10.0.0.10'
+        - Done
+    expected_output: |
+      > show vlan
+      1) VLAN ID: 100, Alias Name: external
+         Interfaces: none; IPs: 192.0.2.10
+      2) VLAN ID: 200, Alias Name: server
+         Interfaces: none; IPs: 10.0.0.10
+      Done
+      VLAN summary: 24 defined, 0 active
+    expected_result:
+      vlans:
+        total: 24
+        active: 0

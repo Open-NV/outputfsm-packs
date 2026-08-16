@@ -1,0 +1,118 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_sys_failover
+  title: F5 BIG-IP TMOS — show sys failover
+  description: Deterministic synthetic, vendor-shaped response for show sys failover on F5 BIG-IP TMOS; not captured
+    output.
+  license: Apache-2.0
+  synthetic: true
+  category: redundancy
+spec:
+  platform: f5_tmos
+  platform_aliases:
+  - f5
+  - bigip
+  - big-ip
+  - tmos
+  command: show sys failover
+  aliases:
+  - sh sys failover
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show sys failover
+    state:
+      source: inventory.redundancy.state
+    peer:
+      source: inventory.redundancy.peer_state
+    ready:
+      generator:
+        name: yes_no
+        source: inventory.redundancy.ready
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}(active)(/Common)(tmos)# ${command}
+    ${records}
+    Local state: ${state}
+    Peer state: ${peer}
+    Redundancy ready: ${ready}
+  result_schema:
+  - path: redundancy.state
+    type: string
+    source: inventory.redundancy.state
+  - path: redundancy.peer_state
+    type: string
+    source: inventory.redundancy.peer_state
+  - path: redundancy.ready
+    type: boolean
+    source: inventory.redundancy.ready
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-f5-tmos-01
+      redundancy:
+        state: active
+        peer_state: standby-ready
+        ready: true
+      display:
+        records:
+        - Sys::Failover
+        - Unit ID  1
+        - Failover State  active
+        - Peer Address  192.0.2.12
+        - Color  green
+    expected_output: |
+      demo-f5-tmos-01(active)(/Common)(tmos)# show sys failover
+      Sys::Failover
+      Unit ID  1
+      Failover State  active
+      Peer Address  192.0.2.12
+      Color  green
+      Local state: active
+      Peer state: standby-ready
+      Redundancy ready: yes
+    expected_result:
+      redundancy:
+        state: active
+        peer_state: standby-ready
+        ready: true
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-f5-tmos-01
+      redundancy:
+        state: active
+        peer_state: standby-cold
+        ready: false
+      display:
+        records:
+        - Sys::Failover
+        - Unit ID  1
+        - Failover State  offline
+        - Peer Address  192.0.2.12
+        - Color  red
+    expected_output: |
+      demo-f5-tmos-01(active)(/Common)(tmos)# show sys failover
+      Sys::Failover
+      Unit ID  1
+      Failover State  offline
+      Peer Address  192.0.2.12
+      Color  red
+      Local state: active
+      Peer state: standby-cold
+      Redundancy ready: no
+    expected_result:
+      redundancy:
+        state: active
+        peer_state: standby-cold
+        ready: false

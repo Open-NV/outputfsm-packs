@@ -1,0 +1,106 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_system_resources
+  title: Cisco NX-OS — show system resources
+  description: Deterministic synthetic, vendor-shaped response for show system resources on Cisco NX-OS; not captured
+    output.
+  license: Apache-2.0
+  synthetic: true
+  category: memory
+spec:
+  platform: cisco_nxos
+  platform_aliases:
+  - nxos
+  - nx-os
+  - cisco-nxos
+  command: show system resources
+  aliases:
+  - sh system resources
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show system resources
+    memory:
+      generator:
+        name: percent
+        source: inventory.resources.memory_used_pct
+        precision: 1
+    free_mb:
+      source: inventory.resources.memory_free_mb
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}# ${command}
+    ${records}
+    Memory used: ${memory}
+    Memory free: ${free_mb} MB
+  result_schema:
+  - path: resources.memory_used_pct
+    type: number
+    source: inventory.resources.memory_used_pct
+  - path: resources.memory_free_mb
+    type: integer
+    source: inventory.resources.memory_free_mb
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-cisco-nxos-01
+      resources:
+        memory_used_pct: 48.7
+        memory_free_mb: 4096
+      display:
+        records:
+        - 'Load average: 1 minute: 0.31 5 minutes: 0.42 15 minutes: 0.38'
+        - 'Processes   : 143 total, 1 running'
+        - 'CPU states  : 22.4% user, 3.2% kernel, 0.0% idle'
+        - 'Memory usage: 8192M total, 3990M used, 4096M free'
+        - 'Kernel memory: 1024M, Page cache: 512M'
+    expected_output: |
+      demo-cisco-nxos-01# show system resources
+      Load average: 1 minute: 0.31 5 minutes: 0.42 15 minutes: 0.38
+      Processes   : 143 total, 1 running
+      CPU states  : 22.4% user, 3.2% kernel, 0.0% idle
+      Memory usage: 8192M total, 3990M used, 4096M free
+      Kernel memory: 1024M, Page cache: 512M
+      Memory used: 48.7%
+      Memory free: 4096 MB
+    expected_result:
+      resources:
+        memory_used_pct: 48.7
+        memory_free_mb: 4096
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-cisco-nxos-01
+      resources:
+        memory_used_pct: 97.0
+        memory_free_mb: 128
+      display:
+        records:
+        - 'Load average: 1 minute: 0.31 5 minutes: 0.42 15 minutes: 0.38'
+        - 'Processes   : 143 total, 1 running'
+        - 'CPU states  : 98.1% user, 3.2% kernel, 0.0% idle'
+        - 'Memory usage: 8192M total, 8064M used, 128M free'
+        - 'Kernel memory: 1024M, Page cache: 512M'
+    expected_output: |
+      demo-cisco-nxos-01# show system resources
+      Load average: 1 minute: 0.31 5 minutes: 0.42 15 minutes: 0.38
+      Processes   : 143 total, 1 running
+      CPU states  : 98.1% user, 3.2% kernel, 0.0% idle
+      Memory usage: 8192M total, 8064M used, 128M free
+      Kernel memory: 1024M, Page cache: 512M
+      Memory used: 97.0%
+      Memory free: 128 MB
+    expected_result:
+      resources:
+        memory_used_pct: 97.0
+        memory_free_mb: 128

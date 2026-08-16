@@ -1,0 +1,22 @@
+name: Command or format proposal
+description: Propose new synthetic coverage or a versioned contract change.
+title: "proposal: "
+labels: [proposal, needs-triage]
+body:
+  - type: textarea
+    id: scenario
+    attributes:
+      label: Automation scenario
+    validations:
+      required: true
+  - type: textarea
+    id: design
+    attributes:
+      label: Proposed commands and normalized results
+    validations:
+      required: true
+  - type: textarea
+    id: compatibility
+    attributes:
+      label: Compatibility and consumer impact
+      description: Include validation-packs, CliSynth, executor, and API implications.

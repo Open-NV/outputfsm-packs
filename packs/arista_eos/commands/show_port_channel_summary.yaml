@@ -1,0 +1,108 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_port_channel_summary
+  title: Arista EOS — show port-channel summary
+  description: Deterministic synthetic, vendor-shaped response for show port-channel summary on Arista EOS; not
+    captured output.
+  license: Apache-2.0
+  synthetic: true
+  category: aggregation
+spec:
+  platform: arista_eos
+  platform_aliases:
+  - eos
+  - arista-eos
+  command: show port-channel summary
+  aliases:
+  - sh port-channel summary
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show port-channel summary
+    total:
+      source: inventory.aggregation.total
+    up:
+      source: inventory.aggregation.up
+    down:
+      source: inventory.aggregation.down
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}#${command}
+    ${records}
+    Aggregate summary: ${total} total, ${up} operational, ${down} down
+  result_schema:
+  - path: aggregation.total
+    type: integer
+    source: inventory.aggregation.total
+  - path: aggregation.up
+    type: integer
+    source: inventory.aggregation.up
+  - path: aggregation.down
+    type: integer
+    source: inventory.aggregation.down
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-arista-eos-01
+      aggregation:
+        total: 4
+        up: 4
+        down: 0
+      display:
+        records:
+        - 'Flags: D - Down, P - bundled in port-channel, I - individual'
+        - Group Port-Channel  Type     Protocol Member Ports
+        - 10    Po10(SU)      Eth      LACP     Et1(P) Et2(P)
+        - 20    Po20(SU)      Eth      LACP     Et3(P) Et4(P)
+        - 'Minimum links: 1, fallback: disabled'
+    expected_output: |
+      demo-arista-eos-01#show port-channel summary
+      Flags: D - Down, P - bundled in port-channel, I - individual
+      Group Port-Channel  Type     Protocol Member Ports
+      10    Po10(SU)      Eth      LACP     Et1(P) Et2(P)
+      20    Po20(SU)      Eth      LACP     Et3(P) Et4(P)
+      Minimum links: 1, fallback: disabled
+      Aggregate summary: 4 total, 4 operational, 0 down
+    expected_result:
+      aggregation:
+        total: 4
+        up: 4
+        down: 0
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-arista-eos-01
+      aggregation:
+        total: 4
+        up: 2
+        down: 2
+      display:
+        records:
+        - 'Flags: D - Down, P - bundled in port-channel, I - individual'
+        - Group Port-Channel  Type     Protocol Member Ports
+        - 10    Po10(SU)      Eth      LACP     Et1(P) Et2(P)
+        - 20    Po20(SD)      Eth      LACP     Et3(P) Et4(D)
+        - 'Minimum links: 1, fallback: disabled'
+    expected_output: |
+      demo-arista-eos-01#show port-channel summary
+      Flags: D - Down, P - bundled in port-channel, I - individual
+      Group Port-Channel  Type     Protocol Member Ports
+      10    Po10(SU)      Eth      LACP     Et1(P) Et2(P)
+      20    Po20(SD)      Eth      LACP     Et3(P) Et4(D)
+      Minimum links: 1, fallback: disabled
+      Aggregate summary: 4 total, 2 operational, 2 down
+    expected_result:
+      aggregation:
+        total: 4
+        up: 2
+        down: 2

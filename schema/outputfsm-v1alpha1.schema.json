@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://opennv.dev/schemas/outputfsm-v1alpha1.schema.json",
+  "title": "OpenNV OutputFSM",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["apiVersion", "kind", "metadata", "spec"],
+  "properties": {
+    "apiVersion": {"const": "opennv.io/v1alpha1"},
+    "kind": {"const": "OutputFSM"},
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "description", "license", "synthetic", "category"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9_]{1,79}$"},
+        "title": {"type": "string"},
+        "description": {"type": "string"},
+        "license": {"const": "Apache-2.0"},
+        "synthetic": {"const": true},
+        "category": {"type": "string"}
+      }
+    },
+    "spec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["platform", "command", "aliases", "variables", "template", "result_schema", "fixtures"],
+      "properties": {
+        "platform": {"type": "string", "pattern": "^[a-z0-9][a-z0-9_]+$"},
+        "platform_aliases": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "command": {"type": "string", "minLength": 1},
+        "aliases": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "variables": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {"$ref": "#/$defs/variableRule"}
+        },
+        "template": {"type": "string", "minLength": 1},
+        "result_schema": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/resultField"}
+        },
+        "fixtures": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/fixture"}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "variableRule": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["source"],
+          "properties": {"source": {"type": "string", "pattern": "^inventory\\."}}
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["literal"],
+          "properties": {"literal": {}}
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["generator"],
+          "properties": {"generator": {"$ref": "#/$defs/generator"}}
+        }
+      ]
+    },
+    "generator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "source"],
+      "properties": {
+        "name": {"enum": ["identity", "uptime_human", "yes_no", "up_down", "percent", "join", "on_off"]},
+        "source": {"type": "string", "pattern": "^inventory\\."},
+        "precision": {"type": "integer", "minimum": 0, "maximum": 6},
+        "separator": {"type": "string", "maxLength": 32}
+      }
+    },
+    "resultField": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "type", "source"],
+      "properties": {
+        "path": {"type": "string", "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+$"},
+        "type": {"enum": ["string", "integer", "number", "boolean", "array", "object"]},
+        "source": {"type": "string", "pattern": "^inventory\\."}
+      }
+    },
+    "fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "description", "inventory", "expected_output", "expected_result"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "description": {"type": "string", "minLength": 1},
+        "inventory": {"type": "object"},
+        "expected_output": {"type": "string"},
+        "expected_result": {"type": "object"}
+      }
+    }
+  }
+}

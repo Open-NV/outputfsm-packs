@@ -1,0 +1,114 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_inventory
+  title: Arista EOS — show inventory
+  description: Deterministic synthetic, vendor-shaped response for show inventory on Arista EOS; not captured output.
+  license: Apache-2.0
+  synthetic: true
+  category: inventory
+spec:
+  platform: arista_eos
+  platform_aliases:
+  - eos
+  - arista-eos
+  command: show inventory
+  aliases:
+  - sh inventory
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show inventory
+    components:
+      source: inventory.inventory_state.components
+    missing_serials:
+      source: inventory.inventory_state.missing_serials
+    serial:
+      source: inventory.inventory_state.chassis_serial
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}#${command}
+    ${records}
+    Inventory summary: ${components} components, ${missing_serials} missing serials
+    Chassis serial: ${serial}
+  result_schema:
+  - path: inventory.components
+    type: integer
+    source: inventory.inventory_state.components
+  - path: inventory.missing_serials
+    type: integer
+    source: inventory.inventory_state.missing_serials
+  - path: inventory.chassis_serial
+    type: string
+    source: inventory.inventory_state.chassis_serial
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-arista-eos-01
+      inventory_state:
+        components: 7
+        missing_serials: 0
+        chassis_serial: OPENNV-SYN-0001
+      display:
+        records:
+        - 'NAME: Chassis, DESCR: OpenNV synthetic network chassis'
+        - 'PID: OPENNV-CHASSIS, VID: V01, SN: OPENNV-SYN-0001'
+        - 'NAME: Power Supply 1, DESCR: Synthetic AC power supply'
+        - 'PID: OPENNV-PSU, VID: V01, SN: OPENNV-PSU-0001'
+        - 'NAME: Fan Tray 1, DESCR: Synthetic fan tray, STATE: ok'
+        - 'PID: OPENNV-FAN, VID: V01, SN: OPENNV-FAN-0001'
+    expected_output: |
+      demo-arista-eos-01#show inventory
+      NAME: Chassis, DESCR: OpenNV synthetic network chassis
+      PID: OPENNV-CHASSIS, VID: V01, SN: OPENNV-SYN-0001
+      NAME: Power Supply 1, DESCR: Synthetic AC power supply
+      PID: OPENNV-PSU, VID: V01, SN: OPENNV-PSU-0001
+      NAME: Fan Tray 1, DESCR: Synthetic fan tray, STATE: ok
+      PID: OPENNV-FAN, VID: V01, SN: OPENNV-FAN-0001
+      Inventory summary: 7 components, 0 missing serials
+      Chassis serial: OPENNV-SYN-0001
+    expected_result:
+      inventory:
+        components: 7
+        missing_serials: 0
+        chassis_serial: OPENNV-SYN-0001
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-arista-eos-01
+      inventory_state:
+        components: 7
+        missing_serials: 2
+        chassis_serial: OPENNV-SYN-0001
+      display:
+        records:
+        - 'NAME: Chassis, DESCR: OpenNV synthetic network chassis'
+        - 'PID: OPENNV-CHASSIS, VID: V01, SN: OPENNV-SYN-0001'
+        - 'NAME: Power Supply 1, DESCR: Synthetic AC power supply'
+        - 'PID: OPENNV-PSU, VID: V01, SN: OPENNV-PSU-0001'
+        - 'NAME: Fan Tray 1, DESCR: Synthetic fan tray, STATE: faulty'
+        - 'PID: OPENNV-FAN, VID: V01, SN: N/A'
+    expected_output: |
+      demo-arista-eos-01#show inventory
+      NAME: Chassis, DESCR: OpenNV synthetic network chassis
+      PID: OPENNV-CHASSIS, VID: V01, SN: OPENNV-SYN-0001
+      NAME: Power Supply 1, DESCR: Synthetic AC power supply
+      PID: OPENNV-PSU, VID: V01, SN: OPENNV-PSU-0001
+      NAME: Fan Tray 1, DESCR: Synthetic fan tray, STATE: faulty
+      PID: OPENNV-FAN, VID: V01, SN: N/A
+      Inventory summary: 7 components, 2 missing serials
+      Chassis serial: OPENNV-SYN-0001
+    expected_result:
+      inventory:
+        components: 7
+        missing_serials: 2
+        chassis_serial: OPENNV-SYN-0001

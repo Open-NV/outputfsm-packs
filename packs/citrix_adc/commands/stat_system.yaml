@@ -1,0 +1,133 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: stat_system
+  title: Citrix ADC / NetScaler — stat system
+  description: Deterministic synthetic, vendor-shaped response for stat system on Citrix ADC / NetScaler; not captured
+    output.
+  license: Apache-2.0
+  synthetic: true
+  category: system_stats
+spec:
+  platform: citrix_adc
+  platform_aliases:
+  - citrix
+  - netscaler
+  - citrix-adc
+  command: stat system
+  aliases:
+  - stat system -fullValues
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: stat system
+    cpu:
+      generator:
+        name: percent
+        source: inventory.resources.cpu_pct
+        precision: 1
+    memory:
+      generator:
+        name: percent
+        source: inventory.resources.memory_used_pct
+        precision: 1
+    connections:
+      source: inventory.resources.active_connections
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    > ${command}
+    ${records}
+    CPU utilization: ${cpu}
+    Memory used: ${memory}
+    Active connections: ${connections}
+  result_schema:
+  - path: resources.cpu_pct
+    type: number
+    source: inventory.resources.cpu_pct
+  - path: resources.memory_used_pct
+    type: number
+    source: inventory.resources.memory_used_pct
+  - path: resources.active_connections
+    type: integer
+    source: inventory.resources.active_connections
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-citrix-adc-01
+      resources:
+        cpu_pct: 22.4
+        memory_used_pct: 48.7
+        active_connections: 1842
+      display:
+        records:
+        - NetScaler system statistics
+        - Metric                              Value        Rate (/s)
+        - CPU utilization                    22.4%        -
+        - Memory utilization                 48.7%        -
+        - Current client connections          1842         -
+        - HTTP requests                       1284231      8421
+        - Packet drops                        0            0
+        - Done
+    expected_output: |
+      > stat system
+      NetScaler system statistics
+      Metric                              Value        Rate (/s)
+      CPU utilization                    22.4%        -
+      Memory utilization                 48.7%        -
+      Current client connections          1842         -
+      HTTP requests                       1284231      8421
+      Packet drops                        0            0
+      Done
+      CPU utilization: 22.4%
+      Memory used: 48.7%
+      Active connections: 1842
+    expected_result:
+      resources:
+        cpu_pct: 22.4
+        memory_used_pct: 48.7
+        active_connections: 1842
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-citrix-adc-01
+      resources:
+        cpu_pct: 98.1
+        memory_used_pct: 94.0
+        active_connections: 24576
+      display:
+        records:
+        - NetScaler system statistics
+        - Metric                              Value        Rate (/s)
+        - CPU utilization                    98.1%        -
+        - Memory utilization                 94.0%        -
+        - Current client connections          24576         -
+        - HTTP requests                       1284231      42000
+        - Packet drops                        9312            152
+        - Done
+    expected_output: |
+      > stat system
+      NetScaler system statistics
+      Metric                              Value        Rate (/s)
+      CPU utilization                    98.1%        -
+      Memory utilization                 94.0%        -
+      Current client connections          24576         -
+      HTTP requests                       1284231      42000
+      Packet drops                        9312            152
+      Done
+      CPU utilization: 98.1%
+      Memory used: 94.0%
+      Active connections: 24576
+    expected_result:
+      resources:
+        cpu_pct: 98.1
+        memory_used_pct: 94.0
+        active_connections: 24576

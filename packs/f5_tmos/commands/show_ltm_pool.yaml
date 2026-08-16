@@ -1,0 +1,122 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_ltm_pool
+  title: F5 BIG-IP TMOS — show ltm pool
+  description: Deterministic synthetic, vendor-shaped response for show ltm pool on F5 BIG-IP TMOS; not captured
+    output.
+  license: Apache-2.0
+  synthetic: true
+  category: lb_pool
+spec:
+  platform: f5_tmos
+  platform_aliases:
+  - f5
+  - bigip
+  - big-ip
+  - tmos
+  command: show ltm pool
+  aliases:
+  - sh ltm pool
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show ltm pool
+    pools:
+      source: inventory.load_balancing.pools
+    available:
+      source: inventory.load_balancing.pools_available
+    unavailable:
+      source: inventory.load_balancing.pools_unavailable
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}(active)(/Common)(tmos)# ${command}
+    ${records}
+    Pool summary: ${available}/${pools} available, ${unavailable} unavailable
+  result_schema:
+  - path: load_balancing.pools
+    type: integer
+    source: inventory.load_balancing.pools
+  - path: load_balancing.pools_available
+    type: integer
+    source: inventory.load_balancing.pools_available
+  - path: load_balancing.pools_unavailable
+    type: integer
+    source: inventory.load_balancing.pools_unavailable
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-f5-tmos-01
+      load_balancing:
+        pools: 8
+        pools_available: 8
+        pools_unavailable: 0
+      display:
+        records:
+        - 'Ltm::Pool: /Common/app_pool'
+        - '  Availability     : available'
+        - '  State            : enabled'
+        - '  Load Balancing Mode : least-connections-member'
+        - '  Active Member Count : 4'
+        - '  Total Member Count  : 4'
+        - '  Monitor          : /Common/app_http'
+        - '  Service Down Action: none'
+    expected_output: |
+      demo-f5-tmos-01(active)(/Common)(tmos)# show ltm pool
+      Ltm::Pool: /Common/app_pool
+        Availability     : available
+        State            : enabled
+        Load Balancing Mode : least-connections-member
+        Active Member Count : 4
+        Total Member Count  : 4
+        Monitor          : /Common/app_http
+        Service Down Action: none
+      Pool summary: 8/8 available, 0 unavailable
+    expected_result:
+      load_balancing:
+        pools: 8
+        pools_available: 8
+        pools_unavailable: 0
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-f5-tmos-01
+      load_balancing:
+        pools: 8
+        pools_available: 6
+        pools_unavailable: 2
+      display:
+        records:
+        - 'Ltm::Pool: /Common/app_pool'
+        - '  Availability     : unavailable'
+        - '  State            : disabled'
+        - '  Load Balancing Mode : least-connections-member'
+        - '  Active Member Count : 2'
+        - '  Total Member Count  : 4'
+        - '  Monitor          : /Common/app_http'
+        - '  Service Down Action: none'
+    expected_output: |
+      demo-f5-tmos-01(active)(/Common)(tmos)# show ltm pool
+      Ltm::Pool: /Common/app_pool
+        Availability     : unavailable
+        State            : disabled
+        Load Balancing Mode : least-connections-member
+        Active Member Count : 2
+        Total Member Count  : 4
+        Monitor          : /Common/app_http
+        Service Down Action: none
+      Pool summary: 6/8 available, 2 unavailable
+    expected_result:
+      load_balancing:
+        pools: 8
+        pools_available: 6
+        pools_unavailable: 2

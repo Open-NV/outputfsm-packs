@@ -1,0 +1,117 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_ha_node
+  title: Citrix ADC / NetScaler — show ha node
+  description: Deterministic synthetic, vendor-shaped response for show ha node on Citrix ADC / NetScaler; not captured
+    output.
+  license: Apache-2.0
+  synthetic: true
+  category: redundancy
+spec:
+  platform: citrix_adc
+  platform_aliases:
+  - citrix
+  - netscaler
+  - citrix-adc
+  command: show ha node
+  aliases:
+  - sh ha node
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show ha node
+    state:
+      source: inventory.redundancy.state
+    peer:
+      source: inventory.redundancy.peer_state
+    ready:
+      generator:
+        name: yes_no
+        source: inventory.redundancy.ready
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    > ${command}
+    ${records}
+    Local state: ${state}
+    Peer state: ${peer}
+    Redundancy ready: ${ready}
+  result_schema:
+  - path: redundancy.state
+    type: string
+    source: inventory.redundancy.state
+  - path: redundancy.peer_state
+    type: string
+    source: inventory.redundancy.peer_state
+  - path: redundancy.ready
+    type: boolean
+    source: inventory.redundancy.ready
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-citrix-adc-01
+      redundancy:
+        state: active
+        peer_state: standby-ready
+        ready: true
+      display:
+        records:
+        - '1) Node ID: 0'
+        - '   IP: 192.0.2.10, State: Primary, Master State: Primary'
+        - '   Sync State: ENABLED, Propagation: SUCCESS'
+        - '2) Node ID: 1'
+        - '   IP: 192.0.2.11, State: Secondary'
+    expected_output: |
+      > show ha node
+      1) Node ID: 0
+         IP: 192.0.2.10, State: Primary, Master State: Primary
+         Sync State: ENABLED, Propagation: SUCCESS
+      2) Node ID: 1
+         IP: 192.0.2.11, State: Secondary
+      Local state: active
+      Peer state: standby-ready
+      Redundancy ready: yes
+    expected_result:
+      redundancy:
+        state: active
+        peer_state: standby-ready
+        ready: true
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-citrix-adc-01
+      redundancy:
+        state: active
+        peer_state: standby-cold
+        ready: false
+      display:
+        records:
+        - '1) Node ID: 0'
+        - '   IP: 192.0.2.10, State: Primary, Master State: Primary'
+        - '   Sync State: DISABLED, Propagation: FAILED'
+        - '2) Node ID: 1'
+        - '   IP: 192.0.2.11, State: DOWN'
+    expected_output: |
+      > show ha node
+      1) Node ID: 0
+         IP: 192.0.2.10, State: Primary, Master State: Primary
+         Sync State: DISABLED, Propagation: FAILED
+      2) Node ID: 1
+         IP: 192.0.2.11, State: DOWN
+      Local state: active
+      Peer state: standby-cold
+      Redundancy ready: no
+    expected_result:
+      redundancy:
+        state: active
+        peer_state: standby-cold
+        ready: false

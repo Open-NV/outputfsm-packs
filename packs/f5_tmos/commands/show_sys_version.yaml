@@ -1,0 +1,130 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_sys_version
+  title: F5 BIG-IP TMOS — show sys version
+  description: Deterministic synthetic, vendor-shaped response for show sys version on F5 BIG-IP TMOS; not captured
+    output.
+  license: Apache-2.0
+  synthetic: true
+  category: system_version
+spec:
+  platform: f5_tmos
+  platform_aliases:
+  - f5
+  - bigip
+  - big-ip
+  - tmos
+  command: show sys version
+  aliases:
+  - sh sys version
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show sys version
+    os_version:
+      source: inventory.system.os_version
+    image:
+      source: inventory.system.image
+    uptime:
+      generator:
+        name: uptime_human
+        source: inventory.system.uptime_seconds
+    oper_state:
+      source: inventory.system.oper_state
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}(active)(/Common)(tmos)# ${command}
+    ${records}
+      Version     ${os_version}
+      BaseBuild   ${image}
+    Uptime: ${uptime}
+    Operating state: ${oper_state}
+  result_schema:
+  - path: system.os_version
+    type: string
+    source: inventory.system.os_version
+  - path: system.image
+    type: string
+    source: inventory.system.image
+  - path: system.uptime_seconds
+    type: integer
+    source: inventory.system.uptime_seconds
+  - path: system.oper_state
+    type: string
+    source: inventory.system.oper_state
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-f5-tmos-01
+      system:
+        os_version: 17.1.1-open
+        image: open-bigip-volume
+        uptime_seconds: 987654
+        oper_state: up
+      display:
+        records:
+        - Sys::Version
+        - Main Package
+        - '  Product     BIG-IP'
+        - '  Build       0.0.1'
+        - '  Edition     OpenNV Synthetic'
+    expected_output: |
+      demo-f5-tmos-01(active)(/Common)(tmos)# show sys version
+      Sys::Version
+      Main Package
+        Product     BIG-IP
+        Build       0.0.1
+        Edition     OpenNV Synthetic
+        Version     17.1.1-open
+        BaseBuild   open-bigip-volume
+      Uptime: 11d 10:20:54
+      Operating state: up
+    expected_result:
+      system:
+        os_version: 17.1.1-open
+        image: open-bigip-volume
+        uptime_seconds: 987654
+        oper_state: up
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-f5-tmos-01
+      system:
+        os_version: 17.1.1-open
+        image: open-bigip-volume
+        uptime_seconds: 987654
+        oper_state: down
+      display:
+        records:
+        - Sys::Version
+        - Main Package
+        - '  Product     BIG-IP'
+        - '  Build       0.0.1'
+        - '  Edition     OpenNV Synthetic'
+    expected_output: |
+      demo-f5-tmos-01(active)(/Common)(tmos)# show sys version
+      Sys::Version
+      Main Package
+        Product     BIG-IP
+        Build       0.0.1
+        Edition     OpenNV Synthetic
+        Version     17.1.1-open
+        BaseBuild   open-bigip-volume
+      Uptime: 11d 10:20:54
+      Operating state: down
+    expected_result:
+      system:
+        os_version: 17.1.1-open
+        image: open-bigip-volume
+        uptime_seconds: 987654
+        oper_state: down

@@ -1,0 +1,109 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_processes_top_once
+  title: Arista EOS — show processes top once
+  description: Deterministic synthetic, vendor-shaped response for show processes top once on Arista EOS; not captured
+    output.
+  license: Apache-2.0
+  synthetic: true
+  category: cpu
+spec:
+  platform: arista_eos
+  platform_aliases:
+  - eos
+  - arista-eos
+  command: show processes top once
+  aliases:
+  - sh processes top once
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show processes top once
+    cpu:
+      generator:
+        name: percent
+        source: inventory.resources.cpu_pct
+        precision: 1
+    load:
+      source: inventory.resources.load_5m
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}#${command}
+    ${records}
+    CPU utilization: ${cpu}
+    Five-minute load: ${load}
+  result_schema:
+  - path: resources.cpu_pct
+    type: number
+    source: inventory.resources.cpu_pct
+  - path: resources.load_5m
+    type: number
+    source: inventory.resources.load_5m
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-arista-eos-01
+      resources:
+        cpu_pct: 22.4
+        load_5m: 0.42
+      display:
+        records:
+        - 'top - 07:00:00 up 30 days, load average: 0.42, 0.38, 0.31'
+        - 'Tasks: 143 total, 1 running, 142 sleeping, 0 stopped, 0 zombie'
+        - '%Cpu(s): 22.4 us, 3.2 sy, 0.0 ni, 0.0 wa, 0.0 hi, 0.0 si'
+        - PID USER       PR NI    VIRT    RES S %CPU %MEM     TIME+ COMMAND
+        - 911 root       20  0  812000 244000 S 8.2  3.0 112:41.00 ProcMgr
+        - 744 root       20  0  422000 110000 S  1.4  1.3  48:02.00 Rib
+    expected_output: |
+      demo-arista-eos-01#show processes top once
+      top - 07:00:00 up 30 days, load average: 0.42, 0.38, 0.31
+      Tasks: 143 total, 1 running, 142 sleeping, 0 stopped, 0 zombie
+      %Cpu(s): 22.4 us, 3.2 sy, 0.0 ni, 0.0 wa, 0.0 hi, 0.0 si
+      PID USER       PR NI    VIRT    RES S %CPU %MEM     TIME+ COMMAND
+      911 root       20  0  812000 244000 S 8.2  3.0 112:41.00 ProcMgr
+      744 root       20  0  422000 110000 S  1.4  1.3  48:02.00 Rib
+      CPU utilization: 22.4%
+      Five-minute load: 0.42
+    expected_result:
+      resources:
+        cpu_pct: 22.4
+        load_5m: 0.42
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-arista-eos-01
+      resources:
+        cpu_pct: 98.1
+        load_5m: 17.9
+      display:
+        records:
+        - 'top - 07:00:00 up 30 days, load average: 17.90, 0.38, 0.31'
+        - 'Tasks: 143 total, 1 running, 142 sleeping, 0 stopped, 0 zombie'
+        - '%Cpu(s): 98.1 us, 3.2 sy, 0.0 ni, 0.0 wa, 0.0 hi, 0.0 si'
+        - PID USER       PR NI    VIRT    RES S %CPU %MEM     TIME+ COMMAND
+        - 911 root       20  0  812000 244000 R 88.0  3.0 112:41.00 ProcMgr
+        - 744 root       20  0  422000 110000 S  1.4  1.3  48:02.00 Rib
+    expected_output: |
+      demo-arista-eos-01#show processes top once
+      top - 07:00:00 up 30 days, load average: 17.90, 0.38, 0.31
+      Tasks: 143 total, 1 running, 142 sleeping, 0 stopped, 0 zombie
+      %Cpu(s): 98.1 us, 3.2 sy, 0.0 ni, 0.0 wa, 0.0 hi, 0.0 si
+      PID USER       PR NI    VIRT    RES S %CPU %MEM     TIME+ COMMAND
+      911 root       20  0  812000 244000 R 88.0  3.0 112:41.00 ProcMgr
+      744 root       20  0  422000 110000 S  1.4  1.3  48:02.00 Rib
+      CPU utilization: 98.1%
+      Five-minute load: 17.9
+    expected_result:
+      resources:
+        cpu_pct: 98.1
+        load_5m: 17.9

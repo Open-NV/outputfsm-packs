@@ -1,0 +1,103 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_l2vpn_forwarding_bridge_domain_mac_address
+  title: Cisco IOS XR — show l2vpn forwarding bridge-domain mac-address
+  description: Deterministic synthetic, vendor-shaped response for show l2vpn forwarding bridge-domain mac-address
+    on Cisco IOS XR; not captured output.
+  license: Apache-2.0
+  synthetic: true
+  category: mac
+spec:
+  platform: cisco_iosxr
+  platform_aliases:
+  - iosxr
+  - ios-xr
+  - cisco-ios-xr
+  command: show l2vpn forwarding bridge-domain mac-address
+  aliases:
+  - sh l2vpn forwarding bridge-domain mac-address
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show l2vpn forwarding bridge-domain mac-address
+    entries:
+      source: inventory.mac.entries
+    dynamic:
+      source: inventory.mac.dynamic
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    RP/0/RP0/CPU0:${hostname}#${command}
+    ${records}
+    Total Mac Addresses for this criterion: ${entries}
+    Dynamic entries: ${dynamic}
+  result_schema:
+  - path: mac.entries
+    type: integer
+    source: inventory.mac.entries
+  - path: mac.dynamic
+    type: integer
+    source: inventory.mac.dynamic
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-cisco-iosxr-01
+      mac:
+        entries: 742
+        dynamic: 736
+      display:
+        records:
+        - 'To Resynchronize MAC table from the Network, use the command:'
+        - l2vpn resynchronize forwarding mac-address-table location all
+        - Mac Address     Type    Learned from/Filtered on     LC learned Resync Age
+        - 0200.0000.6001  dynamic Bundle-Ether10.100           0/0/CPU0   N/A    00:02:11
+        - 0200.0000.6002  dynamicGigabitEthernet0/0/0/1.100 0/0/CPU0   N/A    00:01:22
+        - 'Bridge-domain: server-bd, 2 MAC addresses'
+    expected_output: |
+      RP/0/RP0/CPU0:demo-cisco-iosxr-01#show l2vpn forwarding bridge-domain mac-address
+      To Resynchronize MAC table from the Network, use the command:
+      l2vpn resynchronize forwarding mac-address-table location all
+      Mac Address     Type    Learned from/Filtered on     LC learned Resync Age
+      0200.0000.6001  dynamic Bundle-Ether10.100           0/0/CPU0   N/A    00:02:11
+      0200.0000.6002  dynamicGigabitEthernet0/0/0/1.100 0/0/CPU0   N/A    00:01:22
+      Bridge-domain: server-bd, 2 MAC addresses
+      Total Mac Addresses for this criterion: 742
+      Dynamic entries: 736
+    expected_result:
+      mac:
+        entries: 742
+        dynamic: 736
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-cisco-iosxr-01
+      mac:
+        entries: 0
+        dynamic: 0
+      display:
+        records:
+        - 'To Resynchronize MAC table from the Network, use the command:'
+        - l2vpn resynchronize forwarding mac-address-table location all
+        - Mac Address     Type    Learned from/Filtered on     LC learned Resync Age
+        - No MAC addresses found in the selected bridge domains
+    expected_output: |
+      RP/0/RP0/CPU0:demo-cisco-iosxr-01#show l2vpn forwarding bridge-domain mac-address
+      To Resynchronize MAC table from the Network, use the command:
+      l2vpn resynchronize forwarding mac-address-table location all
+      Mac Address     Type    Learned from/Filtered on     LC learned Resync Age
+      No MAC addresses found in the selected bridge domains
+      Total Mac Addresses for this criterion: 0
+      Dynamic entries: 0
+    expected_result:
+      mac:
+        entries: 0
+        dynamic: 0

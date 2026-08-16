@@ -1,0 +1,286 @@
+id: citrix_adc
+name: Citrix ADC / NetScaler
+aliases:
+- citrix
+- netscaler
+- citrix-adc
+commands:
+- id: show_ns_version
+  command: show ns version
+  aliases:
+  - sh ns version
+  definition: packs/citrix_adc/commands/show_ns_version.yaml
+  result_paths:
+  - system.os_version
+  - system.image
+  - system.uptime_seconds
+  - system.oper_state
+  validation_hint:
+    path: system.oper_state
+    operator: eq
+    expected: up
+    failure_example: down
+- id: show_interface
+  command: show interface
+  aliases:
+  - sh interface
+  definition: packs/citrix_adc/commands/show_interface.yaml
+  result_paths:
+  - interfaces.total
+  - interfaces.up
+  - interfaces.down
+  validation_hint:
+    path: interfaces.down
+    operator: lte
+    expected: 1
+    failure_example: 6
+- id: show_interface_detail
+  command: show interface -detail
+  aliases:
+  - sh interface -detail
+  definition: packs/citrix_adc/commands/show_interface_detail.yaml
+  result_paths:
+  - interfaces.error_count
+  - interfaces.utilization_pct
+  - interfaces.mtu
+  validation_hint:
+    path: interfaces.error_count
+    operator: lte
+    expected: 0
+    failure_example: 14
+- id: show_route
+  command: show route
+  aliases:
+  - sh route
+  definition: packs/citrix_adc/commands/show_route.yaml
+  result_paths:
+  - routes.total
+  - routes.default_present
+  - routes.stale
+  validation_hint:
+    path: routes.default_present
+    operator: eq
+    expected: true
+    failure_example: false
+- id: show_arp
+  command: show arp
+  aliases:
+  - sh arp
+  definition: packs/citrix_adc/commands/show_arp.yaml
+  result_paths:
+  - arp.entries
+  - arp.incomplete
+  validation_hint:
+    path: arp.incomplete
+    operator: eq
+    expected: 0
+    failure_example: 5
+- id: show_ns_ip
+  command: show ns ip
+  aliases:
+  - sh ns ip
+  definition: packs/citrix_adc/commands/show_ns_ip.yaml
+  result_paths:
+  - neighbors.count
+  - neighbors.expected_count
+  - neighbors.expected_matches
+  validation_hint:
+    path: neighbors.expected_matches
+    operator: eq
+    expected: true
+    failure_example: false
+- id: show_vlan
+  command: show vlan
+  aliases:
+  - sh vlan
+  definition: packs/citrix_adc/commands/show_vlan.yaml
+  result_paths:
+  - vlans.total
+  - vlans.active
+  validation_hint:
+    path: vlans.active
+    operator: gte
+    expected: 1
+    failure_example: 0
+- id: show_servicegroup
+  command: show serviceGroup
+  aliases:
+  - sh serviceGroup
+  definition: packs/citrix_adc/commands/show_servicegroup.yaml
+  result_paths:
+  - load_balancing.pools
+  - load_balancing.pools_available
+  - load_balancing.pools_unavailable
+  validation_hint:
+    path: load_balancing.pools_unavailable
+    operator: eq
+    expected: 0
+    failure_example: 2
+- id: show_lb_vserver
+  command: show lb vserver
+  aliases:
+  - sh lb vserver
+  definition: packs/citrix_adc/commands/show_lb_vserver.yaml
+  result_paths:
+  - load_balancing.virtual_servers
+  - load_balancing.virtual_servers_available
+  - load_balancing.virtual_servers_unavailable
+  validation_hint:
+    path: load_balancing.virtual_servers_unavailable
+    operator: eq
+    expected: 0
+    failure_example: 3
+- id: show_service
+  command: show service
+  aliases:
+  - sh service
+  definition: packs/citrix_adc/commands/show_service.yaml
+  result_paths:
+  - load_balancing.members
+  - load_balancing.members_up
+  - load_balancing.members_down
+  validation_hint:
+    path: load_balancing.members_down
+    operator: lte
+    expected: 1
+    failure_example: 6
+- id: show_lb_monitor
+  command: show lb monitor
+  aliases:
+  - sh lb monitor
+  definition: packs/citrix_adc/commands/show_lb_monitor.yaml
+  result_paths:
+  - load_balancing.monitors
+  - load_balancing.monitors_enabled
+  - load_balancing.monitors_failing
+  validation_hint:
+    path: load_balancing.monitors_failing
+    operator: eq
+    expected: 0
+    failure_example: 2
+- id: show_ha_node
+  command: show ha node
+  aliases:
+  - sh ha node
+  definition: packs/citrix_adc/commands/show_ha_node.yaml
+  result_paths:
+  - redundancy.state
+  - redundancy.peer_state
+  - redundancy.ready
+  validation_hint:
+    path: redundancy.ready
+    operator: eq
+    expected: true
+    failure_example: false
+- id: show_hardware
+  command: show hardware
+  aliases:
+  - sh hardware
+  definition: packs/citrix_adc/commands/show_hardware.yaml
+  result_paths:
+  - hardware.modules_total
+  - hardware.modules_ok
+  - hardware.faulty_modules
+  validation_hint:
+    path: hardware.faulty_modules
+    operator: eq
+    expected: 0
+    failure_example: 1
+- id: show_cluster_instance
+  command: show cluster instance
+  aliases:
+  - sh cluster instance
+  definition: packs/citrix_adc/commands/show_cluster_instance.yaml
+  result_paths:
+  - redundancy.state
+  - redundancy.peer_state
+  - redundancy.ready
+  validation_hint:
+    path: redundancy.ready
+    operator: eq
+    expected: true
+    failure_example: false
+- id: stat_system
+  command: stat system
+  aliases:
+  - stat system -fullValues
+  definition: packs/citrix_adc/commands/stat_system.yaml
+  result_paths:
+  - resources.cpu_pct
+  - resources.memory_used_pct
+  - resources.active_connections
+  validation_hint:
+    path: resources.cpu_pct
+    operator: lte
+    expected: 80
+    failure_example: 98.1
+- id: stat_lb_vserver
+  command: stat lb vserver
+  aliases:
+  - stat lb vserver -fullValues
+  definition: packs/citrix_adc/commands/stat_lb_vserver.yaml
+  result_paths:
+  - load_balancing.virtual_servers
+  - load_balancing.virtual_servers_available
+  - load_balancing.virtual_servers_unavailable
+  validation_hint:
+    path: load_balancing.virtual_servers_unavailable
+    operator: eq
+    expected: 0
+    failure_example: 3
+- id: show_audit_messages
+  command: show audit messages
+  aliases:
+  - sh audit messages
+  definition: packs/citrix_adc/commands/show_audit_messages.yaml
+  result_paths:
+  - logging.critical_count
+  - logging.warning_count
+  - logging.last_event
+  validation_hint:
+    path: logging.critical_count
+    operator: eq
+    expected: 0
+    failure_example: 4
+- id: show_ns_mode
+  command: show ns mode
+  aliases:
+  - sh ns mode
+  definition: packs/citrix_adc/commands/show_ns_mode.yaml
+  result_paths:
+  - config.clean
+  - config.last_change_id
+  - config.age_minutes
+  validation_hint:
+    path: config.clean
+    operator: eq
+    expected: true
+    failure_example: false
+- id: show_server
+  command: show server
+  aliases:
+  - sh server
+  definition: packs/citrix_adc/commands/show_server.yaml
+  result_paths:
+  - load_balancing.servers
+  - load_balancing.servers_up
+  - load_balancing.servers_down
+  validation_hint:
+    path: load_balancing.servers_down
+    operator: eq
+    expected: 0
+    failure_example: 4
+- id: show_ns_runningconfig
+  command: show ns runningConfig
+  aliases:
+  - sh ns runningConfig
+  definition: packs/citrix_adc/commands/show_ns_runningconfig.yaml
+  result_paths:
+  - config.clean
+  - config.last_change_id
+  - config.age_minutes
+  validation_hint:
+    path: config.clean
+    operator: eq
+    expected: true
+    failure_example: false

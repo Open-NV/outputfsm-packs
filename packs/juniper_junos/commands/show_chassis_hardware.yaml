@@ -1,0 +1,112 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_chassis_hardware
+  title: Juniper Junos — show chassis hardware
+  description: Deterministic synthetic, vendor-shaped response for show chassis hardware on Juniper Junos; not captured
+    output.
+  license: Apache-2.0
+  synthetic: true
+  category: hardware
+spec:
+  platform: juniper_junos
+  platform_aliases:
+  - junos
+  - juniper-junos
+  command: show chassis hardware
+  aliases:
+  - sh chassis hardware
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show chassis hardware
+    modules:
+      source: inventory.hardware.modules_total
+    ok:
+      source: inventory.hardware.modules_ok
+    faulty:
+      source: inventory.hardware.faulty_modules
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}> ${command}
+    ${records}
+    Hardware summary: ${ok}/${modules} healthy, ${faulty} faulty
+  result_schema:
+  - path: hardware.modules_total
+    type: integer
+    source: inventory.hardware.modules_total
+  - path: hardware.modules_ok
+    type: integer
+    source: inventory.hardware.modules_ok
+  - path: hardware.faulty_modules
+    type: integer
+    source: inventory.hardware.faulty_modules
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-juniper-junos-01
+      hardware:
+        modules_total: 3
+        modules_ok: 3
+        faulty_modules: 0
+      display:
+        records:
+        - 'Hardware inventory:'
+        - Item             Version  Part number  Serial number     Description
+        - Chassis                                OPENNV-SYN-0001   MX204 synthetic
+        - Routing Engine 0  REV 01   OPENNV-RE    OPENNV-RE-0001    Routing Engine
+        - FPC 0             REV 01   OPENNV-FPC   OPENNV-FPC-0001   MPC synthetic
+        - Power Supply 0    REV 01   OPENNV-PSU   OPENNV-PSU-0001   AC A
+    expected_output: |
+      demo-juniper-junos-01> show chassis hardware
+      Hardware inventory:
+      Item             Version  Part number  Serial number     Description
+      Chassis                                OPENNV-SYN-0001   MX204 synthetic
+      Routing Engine 0  REV 01   OPENNV-RE    OPENNV-RE-0001    Routing Engine
+      FPC 0             REV 01   OPENNV-FPC   OPENNV-FPC-0001   MPC synthetic
+      Power Supply 0    REV 01   OPENNV-PSU   OPENNV-PSU-0001   AC A
+      Hardware summary: 3/3 healthy, 0 faulty
+    expected_result:
+      hardware:
+        modules_total: 3
+        modules_ok: 3
+        faulty_modules: 0
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-juniper-junos-01
+      hardware:
+        modules_total: 3
+        modules_ok: 2
+        faulty_modules: 1
+      display:
+        records:
+        - 'Hardware inventory:'
+        - Item             Version  Part number  Serial number     Description
+        - Chassis                                OPENNV-SYN-0001   MX204 synthetic
+        - Routing Engine 0  REV 01   OPENNV-RE    OPENNV-RE-0001    Routing Engine
+        - FPC 0             REV 01   OPENNV-FPC   OPENNV-FPC-0001   MPC synthetic
+        - Power Supply 0    REV 01   OPENNV-PSU   N/A               Faulty
+    expected_output: |
+      demo-juniper-junos-01> show chassis hardware
+      Hardware inventory:
+      Item             Version  Part number  Serial number     Description
+      Chassis                                OPENNV-SYN-0001   MX204 synthetic
+      Routing Engine 0  REV 01   OPENNV-RE    OPENNV-RE-0001    Routing Engine
+      FPC 0             REV 01   OPENNV-FPC   OPENNV-FPC-0001   MPC synthetic
+      Power Supply 0    REV 01   OPENNV-PSU   N/A               Faulty
+      Hardware summary: 2/3 healthy, 1 faulty
+    expected_result:
+      hardware:
+        modules_total: 3
+        modules_ok: 2
+        faulty_modules: 1

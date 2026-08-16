@@ -1,0 +1,124 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_cm_sync_status
+  title: F5 BIG-IP TMOS — show cm sync-status
+  description: Deterministic synthetic, vendor-shaped response for show cm sync-status on F5 BIG-IP TMOS; not captured
+    output.
+  license: Apache-2.0
+  synthetic: true
+  category: ha_sync
+spec:
+  platform: f5_tmos
+  platform_aliases:
+  - f5
+  - bigip
+  - big-ip
+  - tmos
+  command: show cm sync-status
+  aliases:
+  - sh cm sync-status
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show cm sync-status
+    state:
+      source: inventory.redundancy.state
+    synced:
+      generator:
+        name: yes_no
+        source: inventory.redundancy.config_synced
+    ready:
+      generator:
+        name: yes_no
+        source: inventory.redundancy.ready
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}(active)(/Common)(tmos)# ${command}
+    ${records}
+    Local state: ${state}
+    Configuration synchronized: ${synced}
+    HA ready: ${ready}
+  result_schema:
+  - path: redundancy.state
+    type: string
+    source: inventory.redundancy.state
+  - path: redundancy.config_synced
+    type: boolean
+    source: inventory.redundancy.config_synced
+  - path: redundancy.ready
+    type: boolean
+    source: inventory.redundancy.ready
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-f5-tmos-01
+      redundancy:
+        state: active
+        config_synced: true
+        ready: true
+      display:
+        records:
+        - 'Cm::Device Group: /Common/sync-failover-group'
+        - Color    green
+        - Status   In Sync
+        - Summary  All devices in the device group are in sync
+        - 'Connected device: /Common/demo-f5-tmos-02'
+        - 'Recommended action: None'
+    expected_output: |
+      demo-f5-tmos-01(active)(/Common)(tmos)# show cm sync-status
+      Cm::Device Group: /Common/sync-failover-group
+      Color    green
+      Status   In Sync
+      Summary  All devices in the device group are in sync
+      Connected device: /Common/demo-f5-tmos-02
+      Recommended action: None
+      Local state: active
+      Configuration synchronized: yes
+      HA ready: yes
+    expected_result:
+      redundancy:
+        state: active
+        config_synced: true
+        ready: true
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-f5-tmos-01
+      redundancy:
+        state: active
+        config_synced: false
+        ready: false
+      display:
+        records:
+        - 'Cm::Device Group: /Common/sync-failover-group'
+        - Color    red
+        - Status   Not All Devices Synced
+        - Summary  Changes pending on peer device
+        - 'Connected device: /Common/demo-f5-tmos-02'
+        - 'Recommended action: Review device trust and sync changes'
+    expected_output: |
+      demo-f5-tmos-01(active)(/Common)(tmos)# show cm sync-status
+      Cm::Device Group: /Common/sync-failover-group
+      Color    red
+      Status   Not All Devices Synced
+      Summary  Changes pending on peer device
+      Connected device: /Common/demo-f5-tmos-02
+      Recommended action: Review device trust and sync changes
+      Local state: active
+      Configuration synchronized: no
+      HA ready: no
+    expected_result:
+      redundancy:
+        state: active
+        config_synced: false
+        ready: false

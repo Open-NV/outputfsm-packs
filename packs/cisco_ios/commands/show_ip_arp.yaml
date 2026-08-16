@@ -1,0 +1,97 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_ip_arp
+  title: Cisco IOS — show ip arp
+  description: Deterministic synthetic, vendor-shaped response for show ip arp on Cisco IOS; not captured output.
+  license: Apache-2.0
+  synthetic: true
+  category: arp
+spec:
+  platform: cisco_ios
+  platform_aliases:
+  - ios
+  - cisco-ios
+  command: show ip arp
+  aliases:
+  - sh ip arp
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show ip arp
+    entries:
+      source: inventory.arp.entries
+    incomplete:
+      source: inventory.arp.incomplete
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}#${command}
+    ${records}
+    Total entries: ${entries}
+    Incomplete entries: ${incomplete}
+  result_schema:
+  - path: arp.entries
+    type: integer
+    source: inventory.arp.entries
+  - path: arp.incomplete
+    type: integer
+    source: inventory.arp.incomplete
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-cisco-ios-01
+      arp:
+        entries: 96
+        incomplete: 0
+      display:
+        records:
+        - Protocol  Address          Age (min)  Hardware Addr   Type   Interface
+        - Internet  192.0.2.2              2   0200.0000.5001  ARPA   Ethernet1
+        - Internet  10.0.0.20              7   0200.0000.5002  ARPA   Vlan100
+        - Internet  198.51.100.2           0   Incomplete    ARPA   Ethernet2
+    expected_output: |
+      demo-cisco-ios-01#show ip arp
+      Protocol  Address          Age (min)  Hardware Addr   Type   Interface
+      Internet  192.0.2.2              2   0200.0000.5001  ARPA   Ethernet1
+      Internet  10.0.0.20              7   0200.0000.5002  ARPA   Vlan100
+      Internet  198.51.100.2           0   Incomplete    ARPA   Ethernet2
+      Total entries: 96
+      Incomplete entries: 0
+    expected_result:
+      arp:
+        entries: 96
+        incomplete: 0
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-cisco-ios-01
+      arp:
+        entries: 96
+        incomplete: 5
+      display:
+        records:
+        - Protocol  Address          Age (min)  Hardware Addr   Type   Interface
+        - Internet  192.0.2.2              2   0200.0000.5001  ARPA   Ethernet1
+        - Internet  10.0.0.20              7   0200.0000.5002  ARPA   Vlan100
+        - Internet  198.51.100.2           0   Incomplete    ARPA   Ethernet2
+    expected_output: |
+      demo-cisco-ios-01#show ip arp
+      Protocol  Address          Age (min)  Hardware Addr   Type   Interface
+      Internet  192.0.2.2              2   0200.0000.5001  ARPA   Ethernet1
+      Internet  10.0.0.20              7   0200.0000.5002  ARPA   Vlan100
+      Internet  198.51.100.2           0   Incomplete    ARPA   Ethernet2
+      Total entries: 96
+      Incomplete entries: 5
+    expected_result:
+      arp:
+        entries: 96
+        incomplete: 5

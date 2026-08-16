@@ -1,0 +1,122 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_chassis_environment
+  title: Juniper Junos — show chassis environment
+  description: Deterministic synthetic, vendor-shaped response for show chassis environment on Juniper Junos; not
+    captured output.
+  license: Apache-2.0
+  synthetic: true
+  category: environment
+spec:
+  platform: juniper_junos
+  platform_aliases:
+  - junos
+  - juniper-junos
+  command: show chassis environment
+  aliases:
+  - sh chassis environment
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show chassis environment
+    temperature:
+      source: inventory.environment.temp_c
+    fans_ok:
+      generator:
+        name: yes_no
+        source: inventory.environment.fans_ok
+    psus_ok:
+      generator:
+        name: yes_no
+        source: inventory.environment.psus_ok
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}> ${command}
+    ${records}
+    Peak temperature: ${temperature} C
+    Fans healthy: ${fans_ok}
+    Power supplies healthy: ${psus_ok}
+  result_schema:
+  - path: environment.temp_c
+    type: number
+    source: inventory.environment.temp_c
+  - path: environment.fans_ok
+    type: boolean
+    source: inventory.environment.fans_ok
+  - path: environment.psus_ok
+    type: boolean
+    source: inventory.environment.psus_ok
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-juniper-junos-01
+      environment:
+        temp_c: 39.5
+        fans_ok: true
+        psus_ok: true
+      display:
+        records:
+        - Class Item                           Status     Measurement
+        - Temp  FPC 0 CPU                      OK         39 degrees C / 102 degrees F
+        - Temp  Routing Engine 0              OK         39.5 degrees C
+        - Fans  Fan 1                          OK         7200 RPM
+        - Power PEM 0                          OK         Online
+        - Power PEM 1                          OK         Online
+    expected_output: |
+      demo-juniper-junos-01> show chassis environment
+      Class Item                           Status     Measurement
+      Temp  FPC 0 CPU                      OK         39 degrees C / 102 degrees F
+      Temp  Routing Engine 0              OK         39.5 degrees C
+      Fans  Fan 1                          OK         7200 RPM
+      Power PEM 0                          OK         Online
+      Power PEM 1                          OK         Online
+      Peak temperature: 39.5 C
+      Fans healthy: yes
+      Power supplies healthy: yes
+    expected_result:
+      environment:
+        temp_c: 39.5
+        fans_ok: true
+        psus_ok: true
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-juniper-junos-01
+      environment:
+        temp_c: 93.0
+        fans_ok: false
+        psus_ok: false
+      display:
+        records:
+        - Class Item                           Status     Measurement
+        - Temp  FPC 0 CPU                      OK         39 degrees C / 102 degrees F
+        - Temp  Routing Engine 0              Failed     93.0 degrees C
+        - Fans  Fan 1                          Failed     0 RPM
+        - Power PEM 0                          Failed     0
+        - Power PEM 1                          OK         Online
+    expected_output: |
+      demo-juniper-junos-01> show chassis environment
+      Class Item                           Status     Measurement
+      Temp  FPC 0 CPU                      OK         39 degrees C / 102 degrees F
+      Temp  Routing Engine 0              Failed     93.0 degrees C
+      Fans  Fan 1                          Failed     0 RPM
+      Power PEM 0                          Failed     0
+      Power PEM 1                          OK         Online
+      Peak temperature: 93.0 C
+      Fans healthy: no
+      Power supplies healthy: no
+    expected_result:
+      environment:
+        temp_c: 93.0
+        fans_ok: false
+        psus_ok: false

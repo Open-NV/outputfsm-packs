@@ -1,0 +1,113 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_lb_monitor
+  title: Citrix ADC / NetScaler — show lb monitor
+  description: Deterministic synthetic, vendor-shaped response for show lb monitor on Citrix ADC / NetScaler; not
+    captured output.
+  license: Apache-2.0
+  synthetic: true
+  category: lb_monitor
+spec:
+  platform: citrix_adc
+  platform_aliases:
+  - citrix
+  - netscaler
+  - citrix-adc
+  command: show lb monitor
+  aliases:
+  - sh lb monitor
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show lb monitor
+    monitors:
+      source: inventory.load_balancing.monitors
+    enabled:
+      source: inventory.load_balancing.monitors_enabled
+    failing:
+      source: inventory.load_balancing.monitors_failing
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    > ${command}
+    ${records}
+    Monitor summary: ${enabled}/${monitors} enabled, ${failing} failing
+  result_schema:
+  - path: load_balancing.monitors
+    type: integer
+    source: inventory.load_balancing.monitors
+  - path: load_balancing.monitors_enabled
+    type: integer
+    source: inventory.load_balancing.monitors_enabled
+  - path: load_balancing.monitors_failing
+    type: integer
+    source: inventory.load_balancing.monitors_failing
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-citrix-adc-01
+      load_balancing:
+        monitors: 6
+        monitors_enabled: 6
+        monitors_failing: 0
+      display:
+        records:
+        - 1) lb monitor app-http HTTP
+        - '   State: DOWN, Effective State: DOWN'
+        - '   Health: 0, Monitor State: FAILED'
+        - 2) synthetic secondary object
+        - '   State: UP, Effective State: UP, Health: 100'
+        - Done
+    expected_output: |
+      > show lb monitor
+      1) lb monitor app-http HTTP
+         State: DOWN, Effective State: DOWN
+         Health: 0, Monitor State: FAILED
+      2) synthetic secondary object
+         State: UP, Effective State: UP, Health: 100
+      Done
+      Monitor summary: 6/6 enabled, 0 failing
+    expected_result:
+      load_balancing:
+        monitors: 6
+        monitors_enabled: 6
+        monitors_failing: 0
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-citrix-adc-01
+      load_balancing:
+        monitors: 6
+        monitors_enabled: 6
+        monitors_failing: 2
+      display:
+        records:
+        - 1) lb monitor app-http HTTP
+        - '   State: DOWN, Effective State: DOWN'
+        - '   Health: 0, Monitor State: FAILED'
+        - 2) synthetic secondary object
+        - '   State: UP, Effective State: UP, Health: 100'
+        - Done
+    expected_output: |
+      > show lb monitor
+      1) lb monitor app-http HTTP
+         State: DOWN, Effective State: DOWN
+         Health: 0, Monitor State: FAILED
+      2) synthetic secondary object
+         State: UP, Effective State: UP, Health: 100
+      Done
+      Monitor summary: 6/6 enabled, 2 failing
+    expected_result:
+      load_balancing:
+        monitors: 6
+        monitors_enabled: 6
+        monitors_failing: 2

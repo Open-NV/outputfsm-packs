@@ -1,0 +1,118 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_sys_hardware
+  title: F5 BIG-IP TMOS — show sys hardware
+  description: Deterministic synthetic, vendor-shaped response for show sys hardware on F5 BIG-IP TMOS; not captured
+    output.
+  license: Apache-2.0
+  synthetic: true
+  category: hardware
+spec:
+  platform: f5_tmos
+  platform_aliases:
+  - f5
+  - bigip
+  - big-ip
+  - tmos
+  command: show sys hardware
+  aliases:
+  - sh sys hardware
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show sys hardware
+    modules:
+      source: inventory.hardware.modules_total
+    ok:
+      source: inventory.hardware.modules_ok
+    faulty:
+      source: inventory.hardware.faulty_modules
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}(active)(/Common)(tmos)# ${command}
+    ${records}
+    Hardware summary: ${ok}/${modules} healthy, ${faulty} faulty
+  result_schema:
+  - path: hardware.modules_total
+    type: integer
+    source: inventory.hardware.modules_total
+  - path: hardware.modules_ok
+    type: integer
+    source: inventory.hardware.modules_ok
+  - path: hardware.faulty_modules
+    type: integer
+    source: inventory.hardware.faulty_modules
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-f5-tmos-01
+      hardware:
+        modules_total: 3
+        modules_ok: 3
+        faulty_modules: 0
+      display:
+        records:
+        - Sys::Hardware
+        - Chassis Information
+        - '  Type                         BIG-IP Virtual Edition synthetic'
+        - '  Serial Number                OPENNV-SYN-0001'
+        - System Information
+        - '  Type                         x86_64 synthetic appliance'
+        - '  Hardware Status              ok'
+    expected_output: |
+      demo-f5-tmos-01(active)(/Common)(tmos)# show sys hardware
+      Sys::Hardware
+      Chassis Information
+        Type                         BIG-IP Virtual Edition synthetic
+        Serial Number                OPENNV-SYN-0001
+      System Information
+        Type                         x86_64 synthetic appliance
+        Hardware Status              ok
+      Hardware summary: 3/3 healthy, 0 faulty
+    expected_result:
+      hardware:
+        modules_total: 3
+        modules_ok: 3
+        faulty_modules: 0
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-f5-tmos-01
+      hardware:
+        modules_total: 3
+        modules_ok: 2
+        faulty_modules: 1
+      display:
+        records:
+        - Sys::Hardware
+        - Chassis Information
+        - '  Type                         BIG-IP Virtual Edition synthetic'
+        - '  Serial Number                OPENNV-SYN-0001'
+        - System Information
+        - '  Type                         x86_64 synthetic appliance'
+        - '  Hardware Status              faulty'
+    expected_output: |
+      demo-f5-tmos-01(active)(/Common)(tmos)# show sys hardware
+      Sys::Hardware
+      Chassis Information
+        Type                         BIG-IP Virtual Edition synthetic
+        Serial Number                OPENNV-SYN-0001
+      System Information
+        Type                         x86_64 synthetic appliance
+        Hardware Status              faulty
+      Hardware summary: 2/3 healthy, 1 faulty
+    expected_result:
+      hardware:
+        modules_total: 3
+        modules_ok: 2
+        faulty_modules: 1

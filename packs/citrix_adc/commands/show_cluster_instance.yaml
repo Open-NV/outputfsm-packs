@@ -1,0 +1,121 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_cluster_instance
+  title: Citrix ADC / NetScaler — show cluster instance
+  description: Deterministic synthetic, vendor-shaped response for show cluster instance on Citrix ADC / NetScaler;
+    not captured output.
+  license: Apache-2.0
+  synthetic: true
+  category: redundancy
+spec:
+  platform: citrix_adc
+  platform_aliases:
+  - citrix
+  - netscaler
+  - citrix-adc
+  command: show cluster instance
+  aliases:
+  - sh cluster instance
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show cluster instance
+    state:
+      source: inventory.redundancy.state
+    peer:
+      source: inventory.redundancy.peer_state
+    ready:
+      generator:
+        name: yes_no
+        source: inventory.redundancy.ready
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    > ${command}
+    ${records}
+    Local state: ${state}
+    Peer state: ${peer}
+    Redundancy ready: ${ready}
+  result_schema:
+  - path: redundancy.state
+    type: string
+    source: inventory.redundancy.state
+  - path: redundancy.peer_state
+    type: string
+    source: inventory.redundancy.peer_state
+  - path: redundancy.ready
+    type: boolean
+    source: inventory.redundancy.ready
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-citrix-adc-01
+      redundancy:
+        state: active
+        peer_state: standby-ready
+        ready: true
+      display:
+        records:
+        - '1) Cluster Instance ID: 1'
+        - '   Operational State: UP, Admin State: ENABLED'
+        - '   Configuration Coordinator: Node 0, Process Health: 100%'
+        - '   Node 0: 192.0.2.10, State: ACTIVE, Health: UP'
+        - '   Node 1: 192.0.2.11, State: ACTIVE, Health: UP'
+        - Done
+    expected_output: |
+      > show cluster instance
+      1) Cluster Instance ID: 1
+         Operational State: UP, Admin State: ENABLED
+         Configuration Coordinator: Node 0, Process Health: 100%
+         Node 0: 192.0.2.10, State: ACTIVE, Health: UP
+         Node 1: 192.0.2.11, State: ACTIVE, Health: UP
+      Done
+      Local state: active
+      Peer state: standby-ready
+      Redundancy ready: yes
+    expected_result:
+      redundancy:
+        state: active
+        peer_state: standby-ready
+        ready: true
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-citrix-adc-01
+      redundancy:
+        state: active
+        peer_state: standby-cold
+        ready: false
+      display:
+        records:
+        - '1) Cluster Instance ID: 1'
+        - '   Operational State: DOWN, Admin State: ENABLED'
+        - '   Configuration Coordinator: Node 0, Process Health: 100%'
+        - '   Node 0: 192.0.2.10, State: ACTIVE, Health: UP'
+        - '   Node 1: 192.0.2.11, State: INACTIVE, Health: DOWN'
+        - Done
+    expected_output: |
+      > show cluster instance
+      1) Cluster Instance ID: 1
+         Operational State: DOWN, Admin State: ENABLED
+         Configuration Coordinator: Node 0, Process Health: 100%
+         Node 0: 192.0.2.10, State: ACTIVE, Health: UP
+         Node 1: 192.0.2.11, State: INACTIVE, Health: DOWN
+      Done
+      Local state: active
+      Peer state: standby-cold
+      Redundancy ready: no
+    expected_result:
+      redundancy:
+        state: active
+        peer_state: standby-cold
+        ready: false

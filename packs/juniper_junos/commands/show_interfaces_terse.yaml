@@ -1,0 +1,107 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_interfaces_terse
+  title: Juniper Junos — show interfaces terse
+  description: Deterministic synthetic, vendor-shaped response for show interfaces terse on Juniper Junos; not captured
+    output.
+  license: Apache-2.0
+  synthetic: true
+  category: interface_summary
+spec:
+  platform: juniper_junos
+  platform_aliases:
+  - junos
+  - juniper-junos
+  command: show interfaces terse
+  aliases:
+  - sh interfaces terse
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show interfaces terse
+    total:
+      source: inventory.interfaces.total
+    up:
+      source: inventory.interfaces.up
+    down:
+      source: inventory.interfaces.down
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}> ${command}
+    Interface               Admin Link Proto    Local                 Remote
+    ${records}
+    Summary: ${total} interfaces, ${up} up, ${down} down
+  result_schema:
+  - path: interfaces.total
+    type: integer
+    source: inventory.interfaces.total
+  - path: interfaces.up
+    type: integer
+    source: inventory.interfaces.up
+  - path: interfaces.down
+    type: integer
+    source: inventory.interfaces.down
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-juniper-junos-01
+      interfaces:
+        total: 48
+        up: 47
+        down: 1
+      display:
+        records:
+        - ge-0/0/0                up    up
+        - ge-0/0/1                up    up
+        - lo0                     up    up
+        - lo0.0                   up    up   inet     192.0.2.11/32
+    expected_output: |
+      demo-juniper-junos-01> show interfaces terse
+      Interface               Admin Link Proto    Local                 Remote
+      ge-0/0/0                up    up
+      ge-0/0/1                up    up
+      lo0                     up    up
+      lo0.0                   up    up   inet     192.0.2.11/32
+      Summary: 48 interfaces, 47 up, 1 down
+    expected_result:
+      interfaces:
+        total: 48
+        up: 47
+        down: 1
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-juniper-junos-01
+      interfaces:
+        total: 48
+        up: 42
+        down: 6
+      display:
+        records:
+        - ge-0/0/0                up    up
+        - ge-0/0/1                up    down
+        - lo0                     up    up
+        - lo0.0                   up    up   inet     192.0.2.11/32
+    expected_output: |
+      demo-juniper-junos-01> show interfaces terse
+      Interface               Admin Link Proto    Local                 Remote
+      ge-0/0/0                up    up
+      ge-0/0/1                up    down
+      lo0                     up    up
+      lo0.0                   up    up   inet     192.0.2.11/32
+      Summary: 48 interfaces, 42 up, 6 down
+    expected_result:
+      interfaces:
+        total: 48
+        up: 42
+        down: 6

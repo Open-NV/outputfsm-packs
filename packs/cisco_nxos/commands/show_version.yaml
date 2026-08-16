@@ -1,0 +1,128 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_version
+  title: Cisco NX-OS — show version
+  description: Deterministic synthetic, vendor-shaped response for show version on Cisco NX-OS; not captured output.
+  license: Apache-2.0
+  synthetic: true
+  category: system_version
+spec:
+  platform: cisco_nxos
+  platform_aliases:
+  - nxos
+  - nx-os
+  - cisco-nxos
+  command: show version
+  aliases:
+  - sh version
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show version
+    os_version:
+      source: inventory.system.os_version
+    image:
+      source: inventory.system.image
+    uptime:
+      generator:
+        name: uptime_human
+        source: inventory.system.uptime_seconds
+    oper_state:
+      source: inventory.system.oper_state
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}# ${command}
+    ${records}
+    Software version: ${os_version}
+    System image file: ${image}
+    System uptime: ${uptime}
+    Operating state: ${oper_state}
+  result_schema:
+  - path: system.os_version
+    type: string
+    source: inventory.system.os_version
+  - path: system.image
+    type: string
+    source: inventory.system.image
+  - path: system.uptime_seconds
+    type: integer
+    source: inventory.system.uptime_seconds
+  - path: system.oper_state
+    type: string
+    source: inventory.system.oper_state
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-cisco-nxos-01
+      system:
+        os_version: 10.4(3)-open
+        image: bootflash:/open-nxos-image.bin
+        uptime_seconds: 987654
+        oper_state: up
+      display:
+        records:
+        - '  BIOS: version 08.00'
+        - '  kickstart: version synthetic'
+        - Hardware
+        - '  cisco Nexus9000 synthetic chassis with 16384000 kB of memory'
+        - '  Device name: open-nv-nxos-01'
+    expected_output: |
+      demo-cisco-nxos-01# show version
+        BIOS: version 08.00
+        kickstart: version synthetic
+      Hardware
+        cisco Nexus9000 synthetic chassis with 16384000 kB of memory
+        Device name: open-nv-nxos-01
+      Software version: 10.4(3)-open
+      System image file: bootflash:/open-nxos-image.bin
+      System uptime: 11d 10:20:54
+      Operating state: up
+    expected_result:
+      system:
+        os_version: 10.4(3)-open
+        image: bootflash:/open-nxos-image.bin
+        uptime_seconds: 987654
+        oper_state: up
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-cisco-nxos-01
+      system:
+        os_version: 10.4(3)-open
+        image: bootflash:/open-nxos-image.bin
+        uptime_seconds: 987654
+        oper_state: down
+      display:
+        records:
+        - '  BIOS: version 08.00'
+        - '  kickstart: version synthetic'
+        - Hardware
+        - '  cisco Nexus9000 synthetic chassis with 16384000 kB of memory'
+        - '  Device name: open-nv-nxos-01'
+    expected_output: |
+      demo-cisco-nxos-01# show version
+        BIOS: version 08.00
+        kickstart: version synthetic
+      Hardware
+        cisco Nexus9000 synthetic chassis with 16384000 kB of memory
+        Device name: open-nv-nxos-01
+      Software version: 10.4(3)-open
+      System image file: bootflash:/open-nxos-image.bin
+      System uptime: 11d 10:20:54
+      Operating state: down
+    expected_result:
+      system:
+        os_version: 10.4(3)-open
+        image: bootflash:/open-nxos-image.bin
+        uptime_seconds: 987654
+        oper_state: down

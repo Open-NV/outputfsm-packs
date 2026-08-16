@@ -1,0 +1,127 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_mlag
+  title: Arista EOS — show mlag
+  description: Deterministic synthetic, vendor-shaped response for show mlag on Arista EOS; not captured output.
+  license: Apache-2.0
+  synthetic: true
+  category: redundancy
+spec:
+  platform: arista_eos
+  platform_aliases:
+  - eos
+  - arista-eos
+  command: show mlag
+  aliases:
+  - sh mlag
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show mlag
+    state:
+      source: inventory.redundancy.state
+    peer:
+      source: inventory.redundancy.peer_state
+    ready:
+      generator:
+        name: yes_no
+        source: inventory.redundancy.ready
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}#${command}
+    ${records}
+    Local state: ${state}
+    Peer state: ${peer}
+    Redundancy ready: ${ready}
+  result_schema:
+  - path: redundancy.state
+    type: string
+    source: inventory.redundancy.state
+  - path: redundancy.peer_state
+    type: string
+    source: inventory.redundancy.peer_state
+  - path: redundancy.ready
+    type: boolean
+    source: inventory.redundancy.ready
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-arista-eos-01
+      redundancy:
+        state: active
+        peer_state: standby-ready
+        ready: true
+      display:
+        records:
+        - 'MLAG Configuration:'
+        - 'domain-id                          : MLAG-DFW01'
+        - 'local-interface                    : Vlan4094'
+        - 'peer-address                       : 192.0.2.22'
+        - 'peer-link                          : Port-Channel1000'
+        - 'MLAG Status:'
+        - 'state                              : Active'
+        - 'peer-link status                   : Up'
+    expected_output: |
+      demo-arista-eos-01#show mlag
+      MLAG Configuration:
+      domain-id                          : MLAG-DFW01
+      local-interface                    : Vlan4094
+      peer-address                       : 192.0.2.22
+      peer-link                          : Port-Channel1000
+      MLAG Status:
+      state                              : Active
+      peer-link status                   : Up
+      Local state: active
+      Peer state: standby-ready
+      Redundancy ready: yes
+    expected_result:
+      redundancy:
+        state: active
+        peer_state: standby-ready
+        ready: true
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-arista-eos-01
+      redundancy:
+        state: active
+        peer_state: standby-cold
+        ready: false
+      display:
+        records:
+        - 'MLAG Configuration:'
+        - 'domain-id                          : MLAG-DFW01'
+        - 'local-interface                    : Vlan4094'
+        - 'peer-address                       : 192.0.2.22'
+        - 'peer-link                          : Port-Channel1000'
+        - 'MLAG Status:'
+        - 'state                              : Inactive'
+        - 'peer-link status                   : Down'
+    expected_output: |
+      demo-arista-eos-01#show mlag
+      MLAG Configuration:
+      domain-id                          : MLAG-DFW01
+      local-interface                    : Vlan4094
+      peer-address                       : 192.0.2.22
+      peer-link                          : Port-Channel1000
+      MLAG Status:
+      state                              : Inactive
+      peer-link status                   : Down
+      Local state: active
+      Peer state: standby-cold
+      Redundancy ready: no
+    expected_result:
+      redundancy:
+        state: active
+        peer_state: standby-cold
+        ready: false

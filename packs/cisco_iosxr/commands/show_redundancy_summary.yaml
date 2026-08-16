@@ -1,0 +1,121 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_redundancy_summary
+  title: Cisco IOS XR — show redundancy summary
+  description: Deterministic synthetic, vendor-shaped response for show redundancy summary on Cisco IOS XR; not
+    captured output.
+  license: Apache-2.0
+  synthetic: true
+  category: redundancy
+spec:
+  platform: cisco_iosxr
+  platform_aliases:
+  - iosxr
+  - ios-xr
+  - cisco-ios-xr
+  command: show redundancy summary
+  aliases:
+  - sh redundancy summary
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show redundancy summary
+    state:
+      source: inventory.redundancy.state
+    peer:
+      source: inventory.redundancy.peer_state
+    ready:
+      generator:
+        name: yes_no
+        source: inventory.redundancy.ready
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    RP/0/RP0/CPU0:${hostname}#${command}
+    ${records}
+    Local state: ${state}
+    Peer state: ${peer}
+    Redundancy ready: ${ready}
+  result_schema:
+  - path: redundancy.state
+    type: string
+    source: inventory.redundancy.state
+  - path: redundancy.peer_state
+    type: string
+    source: inventory.redundancy.peer_state
+  - path: redundancy.ready
+    type: boolean
+    source: inventory.redundancy.ready
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-cisco-iosxr-01
+      redundancy:
+        state: active
+        peer_state: standby-ready
+        ready: true
+      display:
+        records:
+        - 'Redundancy information for node 0/RP0/CPU0:'
+        - ============================================
+        - Node 0/RP0/CPU0 is in ACTIVE role
+        - Node 0/RP1/CPU0 is in STANDBY role
+        - Standby node in READY state
+        - 'NSR state: ready'
+    expected_output: |
+      RP/0/RP0/CPU0:demo-cisco-iosxr-01#show redundancy summary
+      Redundancy information for node 0/RP0/CPU0:
+      ============================================
+      Node 0/RP0/CPU0 is in ACTIVE role
+      Node 0/RP1/CPU0 is in STANDBY role
+      Standby node in READY state
+      NSR state: ready
+      Local state: active
+      Peer state: standby-ready
+      Redundancy ready: yes
+    expected_result:
+      redundancy:
+        state: active
+        peer_state: standby-ready
+        ready: true
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-cisco-iosxr-01
+      redundancy:
+        state: active
+        peer_state: standby-cold
+        ready: false
+      display:
+        records:
+        - 'Redundancy information for node 0/RP0/CPU0:'
+        - ============================================
+        - Node 0/RP0/CPU0 is in ACTIVE role
+        - Node 0/RP1/CPU0 is in STANDBY role
+        - Standby node in COLD state
+        - 'NSR state: not ready'
+    expected_output: |
+      RP/0/RP0/CPU0:demo-cisco-iosxr-01#show redundancy summary
+      Redundancy information for node 0/RP0/CPU0:
+      ============================================
+      Node 0/RP0/CPU0 is in ACTIVE role
+      Node 0/RP1/CPU0 is in STANDBY role
+      Standby node in COLD state
+      NSR state: not ready
+      Local state: active
+      Peer state: standby-cold
+      Redundancy ready: no
+    expected_result:
+      redundancy:
+        state: active
+        peer_state: standby-cold
+        ready: false

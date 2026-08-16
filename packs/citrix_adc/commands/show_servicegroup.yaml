@@ -1,0 +1,113 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_servicegroup
+  title: Citrix ADC / NetScaler — show serviceGroup
+  description: Deterministic synthetic, vendor-shaped response for show serviceGroup on Citrix ADC / NetScaler;
+    not captured output.
+  license: Apache-2.0
+  synthetic: true
+  category: lb_pool
+spec:
+  platform: citrix_adc
+  platform_aliases:
+  - citrix
+  - netscaler
+  - citrix-adc
+  command: show serviceGroup
+  aliases:
+  - sh serviceGroup
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show serviceGroup
+    pools:
+      source: inventory.load_balancing.pools
+    available:
+      source: inventory.load_balancing.pools_available
+    unavailable:
+      source: inventory.load_balancing.pools_unavailable
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    > ${command}
+    ${records}
+    Pool summary: ${available}/${pools} available, ${unavailable} unavailable
+  result_schema:
+  - path: load_balancing.pools
+    type: integer
+    source: inventory.load_balancing.pools
+  - path: load_balancing.pools_available
+    type: integer
+    source: inventory.load_balancing.pools_available
+  - path: load_balancing.pools_unavailable
+    type: integer
+    source: inventory.load_balancing.pools_unavailable
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-citrix-adc-01
+      load_balancing:
+        pools: 8
+        pools_available: 8
+        pools_unavailable: 0
+      display:
+        records:
+        - 1) serviceGroup app-pool HTTP
+        - '   State: UP, Effective State: UP'
+        - '   Health: 100, Monitor State: UP'
+        - 2) synthetic secondary object
+        - '   State: UP, Effective State: UP, Health: 100'
+        - Done
+    expected_output: |
+      > show serviceGroup
+      1) serviceGroup app-pool HTTP
+         State: UP, Effective State: UP
+         Health: 100, Monitor State: UP
+      2) synthetic secondary object
+         State: UP, Effective State: UP, Health: 100
+      Done
+      Pool summary: 8/8 available, 0 unavailable
+    expected_result:
+      load_balancing:
+        pools: 8
+        pools_available: 8
+        pools_unavailable: 0
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-citrix-adc-01
+      load_balancing:
+        pools: 8
+        pools_available: 6
+        pools_unavailable: 2
+      display:
+        records:
+        - 1) serviceGroup app-pool HTTP
+        - '   State: DOWN, Effective State: DOWN'
+        - '   Health: 0, Monitor State: FAILED'
+        - 2) synthetic secondary object
+        - '   State: UP, Effective State: UP, Health: 100'
+        - Done
+    expected_output: |
+      > show serviceGroup
+      1) serviceGroup app-pool HTTP
+         State: DOWN, Effective State: DOWN
+         Health: 0, Monitor State: FAILED
+      2) synthetic secondary object
+         State: UP, Effective State: UP, Health: 100
+      Done
+      Pool summary: 6/8 available, 2 unavailable
+    expected_result:
+      load_balancing:
+        pools: 8
+        pools_available: 6
+        pools_unavailable: 2

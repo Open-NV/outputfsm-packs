@@ -1,0 +1,108 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_ipv4_interface_brief
+  title: Cisco IOS XR — show ipv4 interface brief
+  description: Deterministic synthetic, vendor-shaped response for show ipv4 interface brief on Cisco IOS XR; not
+    captured output.
+  license: Apache-2.0
+  synthetic: true
+  category: interface_summary
+spec:
+  platform: cisco_iosxr
+  platform_aliases:
+  - iosxr
+  - ios-xr
+  - cisco-ios-xr
+  command: show ipv4 interface brief
+  aliases:
+  - sh ipv4 interface brief
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show ipv4 interface brief
+    total:
+      source: inventory.interfaces.total
+    up:
+      source: inventory.interfaces.up
+    down:
+      source: inventory.interfaces.down
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    RP/0/RP0/CPU0:${hostname}#${command}
+    Interface            IP-Address      Status          Protocol Vrf-Name
+    ${records}
+    Summary: ${total} interfaces, ${up} up, ${down} down
+  result_schema:
+  - path: interfaces.total
+    type: integer
+    source: inventory.interfaces.total
+  - path: interfaces.up
+    type: integer
+    source: inventory.interfaces.up
+  - path: interfaces.down
+    type: integer
+    source: inventory.interfaces.down
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-cisco-iosxr-01
+      interfaces:
+        total: 48
+        up: 47
+        down: 1
+      display:
+        records:
+        - Gi0/0/0/0          192.0.2.1       Up              Up       default
+        - Gi0/0/0/1          198.51.100.1    Up              Up       default
+        - Lo0                 203.0.113.11    Up              Up       default
+        - BE10                10.0.0.1        Up              Up       default
+    expected_output: |
+      RP/0/RP0/CPU0:demo-cisco-iosxr-01#show ipv4 interface brief
+      Interface            IP-Address      Status          Protocol Vrf-Name
+      Gi0/0/0/0          192.0.2.1       Up              Up       default
+      Gi0/0/0/1          198.51.100.1    Up              Up       default
+      Lo0                 203.0.113.11    Up              Up       default
+      BE10                10.0.0.1        Up              Up       default
+      Summary: 48 interfaces, 47 up, 1 down
+    expected_result:
+      interfaces:
+        total: 48
+        up: 47
+        down: 1
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-cisco-iosxr-01
+      interfaces:
+        total: 48
+        up: 42
+        down: 6
+      display:
+        records:
+        - Gi0/0/0/0          192.0.2.1       Up              Up       default
+        - Gi0/0/0/1          198.51.100.1    Up              Down     default
+        - Lo0                 203.0.113.11    Up              Up       default
+        - BE10                10.0.0.1        Up              Up       default
+    expected_output: |
+      RP/0/RP0/CPU0:demo-cisco-iosxr-01#show ipv4 interface brief
+      Interface            IP-Address      Status          Protocol Vrf-Name
+      Gi0/0/0/0          192.0.2.1       Up              Up       default
+      Gi0/0/0/1          198.51.100.1    Up              Down     default
+      Lo0                 203.0.113.11    Up              Up       default
+      BE10                10.0.0.1        Up              Up       default
+      Summary: 48 interfaces, 42 up, 6 down
+    expected_result:
+      interfaces:
+        total: 48
+        up: 42
+        down: 6

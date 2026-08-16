@@ -1,0 +1,111 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_platform
+  title: Arista EOS — show platform
+  description: Deterministic synthetic, vendor-shaped response for show platform on Arista EOS; not captured output.
+  license: Apache-2.0
+  synthetic: true
+  category: hardware
+spec:
+  platform: arista_eos
+  platform_aliases:
+  - eos
+  - arista-eos
+  command: show platform
+  aliases:
+  - sh platform
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show platform
+    modules:
+      source: inventory.hardware.modules_total
+    ok:
+      source: inventory.hardware.modules_ok
+    faulty:
+      source: inventory.hardware.faulty_modules
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}#${command}
+    ${records}
+    Hardware summary: ${ok}/${modules} healthy, ${faulty} faulty
+  result_schema:
+  - path: hardware.modules_total
+    type: integer
+    source: inventory.hardware.modules_total
+  - path: hardware.modules_ok
+    type: integer
+    source: inventory.hardware.modules_ok
+  - path: hardware.faulty_modules
+    type: integer
+    source: inventory.hardware.faulty_modules
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-arista-eos-01
+      hardware:
+        modules_total: 3
+        modules_ok: 3
+        faulty_modules: 0
+      display:
+        records:
+        - 'NAME: Chassis, DESCR: OpenNV synthetic network chassis'
+        - 'PID: OPENNV-CHASSIS, VID: V01, SN: OPENNV-SYN-0001'
+        - 'NAME: Power Supply 1, DESCR: Synthetic AC power supply'
+        - 'PID: OPENNV-PSU, VID: V01, SN: OPENNV-PSU-0001'
+        - 'NAME: Fan Tray 1, DESCR: Synthetic fan tray, STATE: ok'
+        - 'PID: OPENNV-FAN, VID: V01, SN: OPENNV-FAN-0001'
+    expected_output: |
+      demo-arista-eos-01#show platform
+      NAME: Chassis, DESCR: OpenNV synthetic network chassis
+      PID: OPENNV-CHASSIS, VID: V01, SN: OPENNV-SYN-0001
+      NAME: Power Supply 1, DESCR: Synthetic AC power supply
+      PID: OPENNV-PSU, VID: V01, SN: OPENNV-PSU-0001
+      NAME: Fan Tray 1, DESCR: Synthetic fan tray, STATE: ok
+      PID: OPENNV-FAN, VID: V01, SN: OPENNV-FAN-0001
+      Hardware summary: 3/3 healthy, 0 faulty
+    expected_result:
+      hardware:
+        modules_total: 3
+        modules_ok: 3
+        faulty_modules: 0
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-arista-eos-01
+      hardware:
+        modules_total: 3
+        modules_ok: 2
+        faulty_modules: 1
+      display:
+        records:
+        - 'NAME: Chassis, DESCR: OpenNV synthetic network chassis'
+        - 'PID: OPENNV-CHASSIS, VID: V01, SN: OPENNV-SYN-0001'
+        - 'NAME: Power Supply 1, DESCR: Synthetic AC power supply'
+        - 'PID: OPENNV-PSU, VID: V01, SN: OPENNV-PSU-0001'
+        - 'NAME: Fan Tray 1, DESCR: Synthetic fan tray, STATE: faulty'
+        - 'PID: OPENNV-FAN, VID: V01, SN: N/A'
+    expected_output: |
+      demo-arista-eos-01#show platform
+      NAME: Chassis, DESCR: OpenNV synthetic network chassis
+      PID: OPENNV-CHASSIS, VID: V01, SN: OPENNV-SYN-0001
+      NAME: Power Supply 1, DESCR: Synthetic AC power supply
+      PID: OPENNV-PSU, VID: V01, SN: OPENNV-PSU-0001
+      NAME: Fan Tray 1, DESCR: Synthetic fan tray, STATE: faulty
+      PID: OPENNV-FAN, VID: V01, SN: N/A
+      Hardware summary: 2/3 healthy, 1 faulty
+    expected_result:
+      hardware:
+        modules_total: 3
+        modules_ok: 2
+        faulty_modules: 1

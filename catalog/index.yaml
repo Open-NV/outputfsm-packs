@@ -1,0 +1,2273 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSMCatalog
+metadata:
+  name: opennv-core
+  synthetic: true
+  license: Apache-2.0
+platforms:
+- id: cisco_ios
+  name: Cisco IOS
+  aliases:
+  - ios
+  - cisco-ios
+  commands:
+  - id: show_version
+    command: show version
+    aliases:
+    - sh version
+    definition: packs/cisco_ios/commands/show_version.yaml
+    result_paths:
+    - system.os_version
+    - system.image
+    - system.uptime_seconds
+    - system.oper_state
+    validation_hint:
+      path: system.oper_state
+      operator: eq
+      expected: up
+      failure_example: down
+  - id: show_ip_interface_brief
+    command: show ip interface brief
+    aliases:
+    - sh ip interface brief
+    definition: packs/cisco_ios/commands/show_ip_interface_brief.yaml
+    result_paths:
+    - interfaces.total
+    - interfaces.up
+    - interfaces.down
+    validation_hint:
+      path: interfaces.down
+      operator: lte
+      expected: 1
+      failure_example: 6
+  - id: show_interfaces
+    command: show interfaces
+    aliases:
+    - sh interfaces
+    definition: packs/cisco_ios/commands/show_interfaces.yaml
+    result_paths:
+    - interfaces.error_count
+    - interfaces.utilization_pct
+    - interfaces.mtu
+    validation_hint:
+      path: interfaces.error_count
+      operator: lte
+      expected: 0
+      failure_example: 14
+  - id: show_ip_route
+    command: show ip route
+    aliases:
+    - sh ip route
+    definition: packs/cisco_ios/commands/show_ip_route.yaml
+    result_paths:
+    - routes.total
+    - routes.default_present
+    - routes.stale
+    validation_hint:
+      path: routes.default_present
+      operator: eq
+      expected: true
+      failure_example: false
+  - id: show_ip_arp
+    command: show ip arp
+    aliases:
+    - sh ip arp
+    definition: packs/cisco_ios/commands/show_ip_arp.yaml
+    result_paths:
+    - arp.entries
+    - arp.incomplete
+    validation_hint:
+      path: arp.incomplete
+      operator: eq
+      expected: 0
+      failure_example: 5
+  - id: show_mac_address_table
+    command: show mac address-table
+    aliases:
+    - sh mac address-table
+    definition: packs/cisco_ios/commands/show_mac_address_table.yaml
+    result_paths:
+    - mac.entries
+    - mac.dynamic
+    validation_hint:
+      path: mac.entries
+      operator: gte
+      expected: 1
+      failure_example: 0
+  - id: show_cdp_neighbors_detail
+    command: show cdp neighbors detail
+    aliases:
+    - sh cdp neighbors detail
+    definition: packs/cisco_ios/commands/show_cdp_neighbors_detail.yaml
+    result_paths:
+    - neighbors.count
+    - neighbors.expected_count
+    - neighbors.expected_matches
+    validation_hint:
+      path: neighbors.expected_matches
+      operator: eq
+      expected: true
+      failure_example: false
+  - id: show_vlan_brief
+    command: show vlan brief
+    aliases:
+    - sh vlan brief
+    definition: packs/cisco_ios/commands/show_vlan_brief.yaml
+    result_paths:
+    - vlans.total
+    - vlans.active
+    validation_hint:
+      path: vlans.active
+      operator: gte
+      expected: 1
+      failure_example: 0
+  - id: show_etherchannel_summary
+    command: show etherchannel summary
+    aliases:
+    - sh etherchannel summary
+    definition: packs/cisco_ios/commands/show_etherchannel_summary.yaml
+    result_paths:
+    - aggregation.total
+    - aggregation.up
+    - aggregation.down
+    validation_hint:
+      path: aggregation.down
+      operator: eq
+      expected: 0
+      failure_example: 2
+  - id: show_ip_ospf_neighbor
+    command: show ip ospf neighbor
+    aliases:
+    - sh ip ospf neighbor
+    definition: packs/cisco_ios/commands/show_ip_ospf_neighbor.yaml
+    result_paths:
+    - routing.peers_total
+    - routing.peers_established
+    - routing.established_ratio_pct
+    validation_hint:
+      path: routing.established_ratio_pct
+      operator: gte
+      expected: 95
+      failure_example: 62.5
+  - id: show_ip_bgp_summary
+    command: show ip bgp summary
+    aliases:
+    - sh ip bgp summary
+    definition: packs/cisco_ios/commands/show_ip_bgp_summary.yaml
+    result_paths:
+    - routing.peers_total
+    - routing.peers_established
+    - routing.established_ratio_pct
+    validation_hint:
+      path: routing.established_ratio_pct
+      operator: gte
+      expected: 95
+      failure_example: 62.5
+  - id: show_standby_brief
+    command: show standby brief
+    aliases:
+    - sh standby brief
+    definition: packs/cisco_ios/commands/show_standby_brief.yaml
+    result_paths:
+    - redundancy.state
+    - redundancy.peer_state
+    - redundancy.ready
+    validation_hint:
+      path: redundancy.ready
+      operator: eq
+      expected: true
+      failure_example: false
+  - id: show_inventory
+    command: show inventory
+    aliases:
+    - sh inventory
+    definition: packs/cisco_ios/commands/show_inventory.yaml
+    result_paths:
+    - inventory.components
+    - inventory.missing_serials
+    - inventory.chassis_serial
+    validation_hint:
+      path: inventory.missing_serials
+      operator: eq
+      expected: 0
+      failure_example: 2
+  - id: show_environment_all
+    command: show environment all
+    aliases:
+    - sh environment all
+    definition: packs/cisco_ios/commands/show_environment_all.yaml
+    result_paths:
+    - environment.temp_c
+    - environment.fans_ok
+    - environment.psus_ok
+    validation_hint:
+      path: environment.temp_c
+      operator: lte
+      expected: 75
+      failure_example: 93.0
+  - id: show_processes_cpu_sorted
+    command: show processes cpu sorted
+    aliases:
+    - sh processes cpu sorted
+    definition: packs/cisco_ios/commands/show_processes_cpu_sorted.yaml
+    result_paths:
+    - resources.cpu_pct
+    - resources.load_5m
+    validation_hint:
+      path: resources.cpu_pct
+      operator: lte
+      expected: 80
+      failure_example: 98.1
+  - id: show_processes_memory_sorted
+    command: show processes memory sorted
+    aliases:
+    - sh processes memory sorted
+    definition: packs/cisco_ios/commands/show_processes_memory_sorted.yaml
+    result_paths:
+    - resources.memory_used_pct
+    - resources.memory_free_mb
+    validation_hint:
+      path: resources.memory_used_pct
+      operator: lte
+      expected: 85
+      failure_example: 97.0
+  - id: show_logging
+    command: show logging
+    aliases:
+    - sh logging
+    definition: packs/cisco_ios/commands/show_logging.yaml
+    result_paths:
+    - logging.critical_count
+    - logging.warning_count
+    - logging.last_event
+    validation_hint:
+      path: logging.critical_count
+      operator: eq
+      expected: 0
+      failure_example: 4
+  - id: show_clock_detail
+    command: show clock detail
+    aliases:
+    - sh clock detail
+    definition: packs/cisco_ios/commands/show_clock_detail.yaml
+    result_paths:
+    - clock.iso8601
+    - clock.synced
+    - clock.offset_ms
+    validation_hint:
+      path: clock.synced
+      operator: eq
+      expected: true
+      failure_example: false
+  - id: show_running_config_hostname
+    command: show running-config | include hostname
+    aliases:
+    - sh running-config | include hostname
+    definition: packs/cisco_ios/commands/show_running_config_hostname.yaml
+    result_paths:
+    - config.clean
+    - config.last_change_id
+    - config.age_minutes
+    validation_hint:
+      path: config.clean
+      operator: eq
+      expected: true
+      failure_example: false
+  - id: show_platform
+    command: show platform
+    aliases:
+    - sh platform
+    definition: packs/cisco_ios/commands/show_platform.yaml
+    result_paths:
+    - hardware.modules_total
+    - hardware.modules_ok
+    - hardware.faulty_modules
+    validation_hint:
+      path: hardware.faulty_modules
+      operator: eq
+      expected: 0
+      failure_example: 1
+- id: cisco_iosxe
+  name: Cisco IOS XE
+  aliases:
+  - iosxe
+  - ios-xe
+  - cisco-ios-xe
+  commands:
+  - id: show_version
+    command: show version
+    aliases:
+    - sh version
+    definition: packs/cisco_iosxe/commands/show_version.yaml
+    result_paths:
+    - system.os_version
+    - system.image
+    - system.uptime_seconds
+    - system.oper_state
+    validation_hint:
+      path: system.oper_state
+      operator: eq
+      expected: up
+      failure_example: down
+  - id: show_ip_interface_brief
+    command: show ip interface brief
+    aliases:
+    - sh ip interface brief
+    definition: packs/cisco_iosxe/commands/show_ip_interface_brief.yaml
+    result_paths:
+    - interfaces.total
+    - interfaces.up
+    - interfaces.down
+    validation_hint:
+      path: interfaces.down
+      operator: lte
+      expected: 1
+      failure_example: 6
+  - id: show_interfaces
+    command: show interfaces
+    aliases:
+    - sh interfaces
+    definition: packs/cisco_iosxe/commands/show_interfaces.yaml
+    result_paths:
+    - interfaces.error_count
+    - interfaces.utilization_pct
+    - interfaces.mtu
+    validation_hint:
+      path: interfaces.error_count
+      operator: lte
+      expected: 0
+      failure_example: 14
+  - id: show_ip_route
+    command: show ip route
+    aliases:
+    - sh ip route
+    definition: packs/cisco_iosxe/commands/show_ip_route.yaml
+    result_paths:
+    - routes.total
+    - routes.default_present
+    - routes.stale
+    validation_hint:
+      path: routes.default_present
+      operator: eq
+      expected: true
+      failure_example: false
+  - id: show_ip_arp
+    command: show ip arp
+    aliases:
+    - sh ip arp
+    definition: packs/cisco_iosxe/commands/show_ip_arp.yaml
+    result_paths:
+    - arp.entries
+    - arp.incomplete
+    validation_hint:
+      path: arp.incomplete
+      operator: eq
+      expected: 0
+      failure_example: 5
+  - id: show_mac_address_table
+    command: show mac address-table
+    aliases:
+    - sh mac address-table
+    definition: packs/cisco_iosxe/commands/show_mac_address_table.yaml
+    result_paths:
+    - mac.entries
+    - mac.dynamic
+    validation_hint:
+      path: mac.entries
+      operator: gte
+      expected: 1
+      failure_example: 0
+  - id: show_lldp_neighbors_detail
+    command: show lldp neighbors detail
+    aliases:
+    - sh lldp neighbors detail
+    definition: packs/cisco_iosxe/commands/show_lldp_neighbors_detail.yaml
+    result_paths:
+    - neighbors.count
+    - neighbors.expected_count
+    - neighbors.expected_matches
+    validation_hint:
+      path: neighbors.expected_matches
+      operator: eq
+      expected: true
+      failure_example: false
+  - id: show_vlan_brief
+    command: show vlan brief
+    aliases:
+    - sh vlan brief
+    definition: packs/cisco_iosxe/commands/show_vlan_brief.yaml
+    result_paths:
+    - vlans.total
+    - vlans.active
+    validation_hint:
+      path: vlans.active
+      operator: gte
+      expected: 1
+      failure_example: 0
+  - id: show_etherchannel_summary
+    command: show etherchannel summary
+    aliases:
+    - sh etherchannel summary
+    definition: packs/cisco_iosxe/commands/show_etherchannel_summary.yaml
+    result_paths:
+    - aggregation.total
+    - aggregation.up
+    - aggregation.down
+    validation_hint:
+      path: aggregation.down
+      operator: eq
+      expected: 0
+      failure_example: 2
+  - id: show_ip_ospf_neighbor
+    command: show ip ospf neighbor
+    aliases:
+    - sh ip ospf neighbor
+    definition: packs/cisco_iosxe/commands/show_ip_ospf_neighbor.yaml
+    result_paths:
+    - routing.peers_total
+    - routing.peers_established
+    - routing.established_ratio_pct
+    validation_hint:
+      path: routing.established_ratio_pct
+      operator: gte
+      expected: 95
+      failure_example: 62.5
+  - id: show_bgp_ipv4_unicast_summary
+    command: show bgp ipv4 unicast summary
+    aliases:
+    - sh bgp ipv4 unicast summary
+    definition: packs/cisco_iosxe/commands/show_bgp_ipv4_unicast_summary.yaml
+    result_paths:
+    - routing.peers_total
+    - routing.peers_established
+    - routing.established_ratio_pct
+    validation_hint:
+      path: routing.established_ratio_pct
+      operator: gte
+      expected: 95
+      failure_example: 62.5
+  - id: show_redundancy
+    command: show redundancy
+    aliases:
+    - sh redundancy
+    definition: packs/cisco_iosxe/commands/show_redundancy.yaml
+    result_paths:
+    - redundancy.state
+    - redundancy.peer_state
+    - redundancy.ready
+    validation_hint:
+      path: redundancy.ready
+      operator: eq
+      expected: true
+      failure_example: false
+  - id: show_inventory
+    command: show inventory
+    aliases:
+    - sh inventory
+    definition: packs/cisco_iosxe/commands/show_inventory.yaml
+    result_paths:
+    - inventory.components
+    - inventory.missing_serials
+    - inventory.chassis_serial
+    validation_hint:
+      path: inventory.missing_serials
+      operator: eq
+      expected: 0
+      failure_example: 2
+  - id: show_environment_all
+    command: show environment all
+    aliases:
+    - sh environment all
+    definition: packs/cisco_iosxe/commands/show_environment_all.yaml
+    result_paths:
+    - environment.temp_c
+    - environment.fans_ok
+    - environment.psus_ok
+    validation_hint:
+      path: environment.temp_c
+      operator: lte
+      expected: 75
+      failure_example: 93.0
+  - id: show_processes_cpu_platform_sorted
+    command: show processes cpu platform sorted
+    aliases:
+    - sh processes cpu platform sorted
+    definition: packs/cisco_iosxe/commands/show_processes_cpu_platform_sorted.yaml
+    result_paths:
+    - resources.cpu_pct
+    - resources.load_5m
+    validation_hint:
+      path: resources.cpu_pct
+      operator: lte
+      expected: 80
+      failure_example: 98.1
+  - id: show_platform_software_status_control_processor_brief
+    command: show platform software status control-processor brief
+    aliases:
+    - sh platform software status control-processor brief
+    definition: packs/cisco_iosxe/commands/show_platform_software_status_control_processor_brief.yaml
+    result_paths:
+    - resources.memory_used_pct
+    - resources.memory_free_mb
+    validation_hint:
+      path: resources.memory_used_pct
+      operator: lte
+      expected: 85
+      failure_example: 97.0
+  - id: show_logging
+    command: show logging
+    aliases:
+    - sh logging
+    definition: packs/cisco_iosxe/commands/show_logging.yaml
+    result_paths:
+    - logging.critical_count
+    - logging.warning_count
+    - logging.last_event
+    validation_hint:
+      path: logging.critical_count
+      operator: eq
+      expected: 0
+      failure_example: 4
+  - id: show_clock_detail
+    command: show clock detail
+    aliases:
+    - sh clock detail
+    definition: packs/cisco_iosxe/commands/show_clock_detail.yaml
+    result_paths:
+    - clock.iso8601
+    - clock.synced
+    - clock.offset_ms
+    validation_hint:
+      path: clock.synced
+      operator: eq
+      expected: true
+      failure_example: false
+  - id: show_archive_config_differences
+    command: show archive config differences
+    aliases:
+    - sh archive config differences
+    definition: packs/cisco_iosxe/commands/show_archive_config_differences.yaml
+    result_paths:
+    - config.clean
+    - config.last_change_id
+    - config.age_minutes
+    validation_hint:
+      path: config.clean
+      operator: eq
+      expected: true
+      failure_example: false
+  - id: show_platform
+    command: show platform
+    aliases:
+    - sh platform
+    definition: packs/cisco_iosxe/commands/show_platform.yaml
+    result_paths:
+    - hardware.modules_total
+    - hardware.modules_ok
+    - hardware.faulty_modules
+    validation_hint:
+      path: hardware.faulty_modules
+      operator: eq
+      expected: 0
+      failure_example: 1
+- id: cisco_nxos
+  name: Cisco NX-OS
+  aliases:
+  - nxos
+  - nx-os
+  - cisco-nxos
+  commands:
+  - id: show_version
+    command: show version
+    aliases:
+    - sh version
+    definition: packs/cisco_nxos/commands/show_version.yaml
+    result_paths:
+    - system.os_version
+    - system.image
+    - system.uptime_seconds
+    - system.oper_state
+    validation_hint:
+      path: system.oper_state
+      operator: eq
+      expected: up
+      failure_example: down
+  - id: show_interface_brief
+    command: show interface brief
+    aliases:
+    - sh interface brief
+    definition: packs/cisco_nxos/commands/show_interface_brief.yaml
+    result_paths:
+    - interfaces.total
+    - interfaces.up
+    - interfaces.down
+    validation_hint:
+      path: interfaces.down
+      operator: lte
+      expected: 1
+      failure_example: 6
+  - id: show_interface
+    command: show interface
+    aliases:
+    - sh interface
+    definition: packs/cisco_nxos/commands/show_interface.yaml
+    result_paths:
+    - interfaces.error_count
+    - interfaces.utilization_pct
+    - interfaces.mtu
+    validation_hint:
+      path: interfaces.error_count
+      operator: lte
+      expected: 0
+      failure_example: 14
+  - id: show_ip_route_vrf_all
+    command: show ip route vrf all
+    aliases:
+    - sh ip route vrf all
+    definition: packs/cisco_nxos/commands/show_ip_route_vrf_all.yaml
+    result_paths:
+    - routes.total
+    - routes.default_present
+    - routes.stale
+    validation_hint:
+      path: routes.default_present
+      operator: eq
+      expected: true
+      failure_example: false
+  - id: show_ip_arp_vrf_all
+    command: show ip arp vrf all
+    aliases:
+    - sh ip arp vrf all
+    definition: packs/cisco_nxos/commands/show_ip_arp_vrf_all.yaml
+    result_paths:
+    - arp.entries
+    - arp.incomplete
+    validation_hint:
+      path: arp.incomplete
+      operator: eq
+      expected: 0
+      failure_example: 5
+  - id: show_mac_address_table
+    command: show mac address-table
+    aliases:
+    - sh mac address-table
+    definition: packs/cisco_nxos/commands/show_mac_address_table.yaml
+    result_paths:
+    - mac.entries
+    - mac.dynamic
+    validation_hint:
+      path: mac.entries
+      operator: gte
+      expected: 1
+      failure_example: 0
+  - id: show_lldp_neighbors_detail
+    command: show lldp neighbors detail
+    aliases:
+    - sh lldp neighbors detail
+    definition: packs/cisco_nxos/commands/show_lldp_neighbors_detail.yaml
+    result_paths:
+    - neighbors.count
+    - neighbors.expected_count
+    - neighbors.expected_matches
+    validation_hint:
+      path: neighbors.expected_matches
+      operator: eq
+      expected: true
+      failure_example: false
+  - id: show_vlan_brief
+    command: show vlan brief
+    aliases:
+    - sh vlan brief
+    definition: packs/cisco_nxos/commands/show_vlan_brief.yaml
+    result_paths:
+    - vlans.total
+    - vlans.active
+    validation_hint:
+      path: vlans.active
+      operator: gte
+      expected: 1
+      failure_example: 0
+  - id: show_port_channel_summary
+    command: show port-channel summary
+    aliases:
+    - sh port-channel summary
+    definition: packs/cisco_nxos/commands/show_port_channel_summary.yaml
+    result_paths:
+    - aggregation.total
+    - aggregation.up
+    - aggregation.down
+    validation_hint:
+      path: aggregation.down
+      operator: eq
+      expected: 0
+      failure_example: 2
+  - id: show_bgp_ipv4_unicast_summary
+    command: show bgp ipv4 unicast summary
+    aliases:
+    - sh bgp ipv4 unicast summary
+    definition: packs/cisco_nxos/commands/show_bgp_ipv4_unicast_summary.yaml
+    result_paths:
+    - routing.peers_total
+    - routing.peers_established
+    - routing.established_ratio_pct
+    validation_hint:
+      path: routing.established_ratio_pct
+      operator: gte
+      expected: 95
+      failure_example: 62.5
+  - id: show_ip_ospf_neighbors
+    command: show ip ospf neighbors
+    aliases:
+    - sh ip ospf neighbors
+    definition: packs/cisco_nxos/commands/show_ip_ospf_neighbors.yaml
+    result_paths:
+    - routing.peers_total
+    - routing.peers_established
+    - routing.established_ratio_pct
+    validation_hint:
+      path: routing.established_ratio_pct
+      operator: gte
+      expected: 95
+      failure_example: 62.5
+  - id: show_vpc_brief
+    command: show vpc brief
+    aliases:
+    - sh vpc brief
+    definition: packs/cisco_nxos/commands/show_vpc_brief.yaml
+    result_paths:
+    - redundancy.state
+    - redundancy.peer_state
+    - redundancy.ready
+    validation_hint:
+      path: redundancy.ready
+      operator: eq
+      expected: true
+      failure_example: false
+  - id: show_module
+    command: show module
+    aliases:
+    - sh module
+    definition: packs/cisco_nxos/commands/show_module.yaml
+    result_paths:
+    - hardware.modules_total
+    - hardware.modules_ok
+    - hardware.faulty_modules
+    validation_hint:
+      path: hardware.faulty_modules
+      operator: eq
+      expected: 0
+      failure_example: 1
+  - id: show_environment
+    command: show environment
+    aliases:
+    - sh environment
+    definition: packs/cisco_nxos/commands/show_environment.yaml
+    result_paths:
+    - environment.temp_c
+    - environment.fans_ok
+    - environment.psus_ok
+    validation_hint:
+      path: environment.temp_c
+      operator: lte
+      expected: 75
+      failure_example: 93.0
+  - id: show_system_resources
+    command: show system resources
+    aliases:
+    - sh system resources
+    definition: packs/cisco_nxos/commands/show_system_resources.yaml
+    result_paths:
+    - resources.memory_used_pct
+    - resources.memory_free_mb
+    validation_hint:
+      path: resources.memory_used_pct
+      operator: lte
+      expected: 85
+      failure_example: 97.0
+  - id: show_processes_cpu_sort
+    command: show processes cpu sort
+    aliases:
+    - sh processes cpu sort
+    definition: packs/cisco_nxos/commands/show_processes_cpu_sort.yaml
+    result_paths:
+    - resources.cpu_pct
+    - resources.load_5m
+    validation_hint:
+      path: resources.cpu_pct
+      operator: lte
+      expected: 80
+      failure_example: 98.1
+  - id: show_logging_last_50
+    command: show logging last 50
+    aliases:
+    - sh logging last 50
+    definition: packs/cisco_nxos/commands/show_logging_last_50.yaml
+    result_paths:
+    - logging.critical_count
+    - logging.warning_count
+    - logging.last_event
+    validation_hint:
+      path: logging.critical_count
+      operator: eq
+      expected: 0
+      failure_example: 4
+  - id: show_clock
+    command: show clock
+    aliases:
+    - sh clock
+    definition: packs/cisco_nxos/commands/show_clock.yaml
+    result_paths:
+    - clock.iso8601
+    - clock.synced
+    - clock.offset_ms
+    validation_hint:
+      path: clock.synced
+      operator: eq
+      expected: true
+      failure_example: false
+  - id: show_inventory
+    command: show inventory
+    aliases:
+    - sh inventory
+    definition: packs/cisco_nxos/commands/show_inventory.yaml
+    result_paths:
+    - inventory.components
+    - inventory.missing_serials
+    - inventory.chassis_serial
+    validation_hint:
+      path: inventory.missing_serials
+      operator: eq
+      expected: 0
+      failure_example: 2
+  - id: show_checkpoint_summary
+    command: show checkpoint summary
+    aliases:
+    - sh checkpoint summary
+    definition: packs/cisco_nxos/commands/show_checkpoint_summary.yaml
+    result_paths:
+    - config.clean
+    - config.last_change_id
+    - config.age_minutes
+    validation_hint:
+      path: config.clean
+      operator: eq
+      expected: true
+      failure_example: false
+- id: cisco_iosxr
+  name: Cisco IOS XR
+  aliases:
+  - iosxr
+  - ios-xr
+  - cisco-ios-xr
+  commands:
+  - id: show_version
+    command: show version
+    aliases:
+    - sh version
+    definition: packs/cisco_iosxr/commands/show_version.yaml
+    result_paths:
+    - system.os_version
+    - system.image
+    - system.uptime_seconds
+    - system.oper_state
+    validation_hint:
+      path: system.oper_state
+      operator: eq
+      expected: up
+      failure_example: down
+  - id: show_ipv4_interface_brief
+    command: show ipv4 interface brief
+    aliases:
+    - sh ipv4 interface brief
+    definition: packs/cisco_iosxr/commands/show_ipv4_interface_brief.yaml
+    result_paths:
+    - interfaces.total
+    - interfaces.up
+    - interfaces.down
+    validation_hint:
+      path: interfaces.down
+      operator: lte
+      expected: 1
+      failure_example: 6
+  - id: show_interfaces
+    command: show interfaces
+    aliases:
+    - sh interfaces
+    definition: packs/cisco_iosxr/commands/show_interfaces.yaml
+    result_paths:
+    - interfaces.error_count
+    - interfaces.utilization_pct
+    - interfaces.mtu
+    validation_hint:
+      path: interfaces.error_count
+      operator: lte
+      expected: 0
+      failure_example: 14
+  - id: show_route_ipv4_unicast
+    command: show route ipv4 unicast
+    aliases:
+    - sh route ipv4 unicast
+    definition: packs/cisco_iosxr/commands/show_route_ipv4_unicast.yaml
+    result_paths:
+    - routes.total
+    - routes.default_present
+    - routes.stale
+    validation_hint:
+      path: routes.default_present
+      operator: eq
+      expected: true
+      failure_example: false
+  - id: show_arp
+    command: show arp
+    aliases:
+    - sh arp
+    definition: packs/cisco_iosxr/commands/show_arp.yaml
+    result_paths:
+    - arp.entries
+    - arp.incomplete
+    validation_hint:
+      path: arp.incomplete
+      operator: eq
+      expected: 0
+      failure_example: 5
+  - id: show_l2vpn_forwarding_bridge_domain_mac_address
+    command: show l2vpn forwarding bridge-domain mac-address
+    aliases:
+    - sh l2vpn forwarding bridge-domain mac-address
+    definition: packs/cisco_iosxr/commands/show_l2vpn_forwarding_bridge_domain_mac_address.yaml
+    result_paths:
+    - mac.entries
+    - mac.dynamic
+    validation_hint:
+      path: mac.entries
+      operator: gte
+      expected: 1
+      failure_example: 0
+  - id: show_lldp_neighbors_detail
+    command: show lldp neighbors detail
+    aliases:
+    - sh lldp neighbors detail
+    definition: packs/cisco_iosxr/commands/show_lldp_neighbors_detail.yaml
+    result_paths:
+    - neighbors.count
+    - neighbors.expected_count
+    - neighbors.expected_matches
+    validation_hint:
+      path: neighbors.expected_matches
+      operator: eq
+      expected: true
+      failure_example: false
+  - id: show_l2vpn_bridge_domain_brief
+    command: show l2vpn bridge-domain brief
+    aliases:
+    - sh l2vpn bridge-domain brief
+    definition: packs/cisco_iosxr/commands/show_l2vpn_bridge_domain_brief.yaml
+    result_paths:
+    - vlans.total
+    - vlans.active
+    validation_hint:
+      path: vlans.active
+      operator: gte
+      expected: 1
+      failure_example: 0
+  - id: show_bundle_brief
+    command: show bundle brief
+    aliases:
+    - sh bundle brief
+    definition: packs/cisco_iosxr/commands/show_bundle_brief.yaml
+    result_paths:
+    - aggregation.total
+    - aggregation.up
+    - aggregation.down
+    validation_hint:
+      path: aggregation.down
+      operator: eq
+      expected: 0
+      failure_example: 2
+  - id: show_bgp_ipv4_unicast_summary
+    command: show bgp ipv4 unicast summary
+    aliases:
+    - sh bgp ipv4 unicast summary
+    definition: packs/cisco_iosxr/commands/show_bgp_ipv4_unicast_summary.yaml
+    result_paths:
+    - routing.peers_total
+    - routing.peers_established
+    - routing.established_ratio_pct
+    validation_hint:
+      path: routing.established_ratio_pct
+      operator: gte
+      expected: 95
+      failure_example: 62.5
+  - id: show_ospf_neighbor
+    command: show ospf neighbor
+    aliases:
+    - sh ospf neighbor
+    definition: packs/cisco_iosxr/commands/show_ospf_neighbor.yaml
+    result_paths:
+    - routing.peers_total
+    - routing.peers_established
+    - routing.established_ratio_pct
+    validation_hint:
+      path: routing.established_ratio_pct
+      operator: gte
+      expected: 95
+      failure_example: 62.5
+  - id: show_redundancy_summary
+    command: show redundancy summary
+    aliases:
+    - sh redundancy summary
+    definition: packs/cisco_iosxr/commands/show_redundancy_summary.yaml
+    result_paths:
+    - redundancy.state
+    - redundancy.peer_state
+    - redundancy.ready
+    validation_hint:
+      path: redundancy.ready
+      operator: eq
+      expected: true
+      failure_example: false
+  - id: show_platform
+    command: show platform
+    aliases:
+    - sh platform
+    definition: packs/cisco_iosxr/commands/show_platform.yaml
+    result_paths:
+    - hardware.modules_total
+    - hardware.modules_ok
+    - hardware.faulty_modules
+    validation_hint:
+      path: hardware.faulty_modules
+      operator: eq
+      expected: 0
+      failure_example: 1
+  - id: show_environment_all
+    command: show environment all
+    aliases:
+    - sh environment all
+    definition: packs/cisco_iosxr/commands/show_environment_all.yaml
+    result_paths:
+    - environment.temp_c
+    - environment.fans_ok
+    - environment.psus_ok
+    validation_hint:
+      path: environment.temp_c
+      operator: lte
+      expected: 75
+      failure_example: 93.0
+  - id: show_processes_cpu
+    command: show processes cpu
+    aliases:
+    - sh processes cpu
+    definition: packs/cisco_iosxr/commands/show_processes_cpu.yaml
+    result_paths:
+    - resources.cpu_pct
+    - resources.load_5m
+    validation_hint:
+      path: resources.cpu_pct
+      operator: lte
+      expected: 80
+      failure_example: 98.1
+  - id: show_memory_summary
+    command: show memory summary
+    aliases:
+    - sh memory summary
+    definition: packs/cisco_iosxr/commands/show_memory_summary.yaml
+    result_paths:
+    - resources.memory_used_pct
+    - resources.memory_free_mb
+    validation_hint:
+      path: resources.memory_used_pct
+      operator: lte
+      expected: 85
+      failure_example: 97.0
+  - id: show_logging_last_50
+    command: show logging last 50
+    aliases:
+    - sh logging last 50
+    definition: packs/cisco_iosxr/commands/show_logging_last_50.yaml
+    result_paths:
+    - logging.critical_count
+    - logging.warning_count
+    - logging.last_event
+    validation_hint:
+      path: logging.critical_count
+      operator: eq
+      expected: 0
+      failure_example: 4
+  - id: show_clock
+    command: show clock
+    aliases:
+    - sh clock
+    definition: packs/cisco_iosxr/commands/show_clock.yaml
+    result_paths:
+    - clock.iso8601
+    - clock.synced
+    - clock.offset_ms
+    validation_hint:
+      path: clock.synced
+      operator: eq
+      expected: true
+      failure_example: false
+  - id: show_inventory
+    command: show inventory
+    aliases:
+    - sh inventory
+    definition: packs/cisco_iosxr/commands/show_inventory.yaml
+    result_paths:
+    - inventory.components
+    - inventory.missing_serials
+    - inventory.chassis_serial
+    validation_hint:
+      path: inventory.missing_serials
+      operator: eq
+      expected: 0
+      failure_example: 2
+  - id: show_configuration_commit_list
+    command: show configuration commit list
+    aliases:
+    - sh configuration commit list
+    definition: packs/cisco_iosxr/commands/show_configuration_commit_list.yaml
+    result_paths:
+    - config.clean
+    - config.last_change_id
+    - config.age_minutes
+    validation_hint:
+      path: config.clean
+      operator: eq
+      expected: true
+      failure_example: false
+- id: arista_eos
+  name: Arista EOS
+  aliases:
+  - eos
+  - arista-eos
+  commands:
+  - id: show_version
+    command: show version
+    aliases:
+    - sh version
+    definition: packs/arista_eos/commands/show_version.yaml
+    result_paths:
+    - system.os_version
+    - system.image
+    - system.uptime_seconds
+    - system.oper_state
+    validation_hint:
+      path: system.oper_state
+      operator: eq
+      expected: up
+      failure_example: down
+  - id: show_ip_interface_brief
+    command: show ip interface brief
+    aliases:
+    - sh ip interface brief
+    definition: packs/arista_eos/commands/show_ip_interface_brief.yaml
+    result_paths:
+    - interfaces.total
+    - interfaces.up
+    - interfaces.down
+    validation_hint:
+      path: interfaces.down
+      operator: lte
+      expected: 1
+      failure_example: 6
+  - id: show_interfaces
+    command: show interfaces
+    aliases:
+    - sh interfaces
+    definition: packs/arista_eos/commands/show_interfaces.yaml
+    result_paths:
+    - interfaces.error_count
+    - interfaces.utilization_pct
+    - interfaces.mtu
+    validation_hint:
+      path: interfaces.error_count
+      operator: lte
+      expected: 0
+      failure_example: 14
+  - id: show_ip_route
+    command: show ip route
+    aliases:
+    - sh ip route
+    definition: packs/arista_eos/commands/show_ip_route.yaml
+    result_paths:
+    - routes.total
+    - routes.default_present
+    - routes.stale
+    validation_hint:
+      path: routes.default_present
+      operator: eq
+      expected: true
+      failure_example: false
+  - id: show_ip_arp
+    command: show ip arp
+    aliases:
+    - sh ip arp
+    definition: packs/arista_eos/commands/show_ip_arp.yaml
+    result_paths:
+    - arp.entries
+    - arp.incomplete
+    validation_hint:
+      path: arp.incomplete
+      operator: eq
+      expected: 0
+      failure_example: 5
+  - id: show_mac_address_table
+    command: show mac address-table
+    aliases:
+    - sh mac address-table
+    definition: packs/arista_eos/commands/show_mac_address_table.yaml
+    result_paths:
+    - mac.entries
+    - mac.dynamic
+    validation_hint:
+      path: mac.entries
+      operator: gte
+      expected: 1
+      failure_example: 0
+  - id: show_lldp_neighbors_detail
+    command: show lldp neighbors detail
+    aliases:
+    - sh lldp neighbors detail
+    definition: packs/arista_eos/commands/show_lldp_neighbors_detail.yaml
+    result_paths:
+    - neighbors.count
+    - neighbors.expected_count
+    - neighbors.expected_matches
+    validation_hint:
+      path: neighbors.expected_matches
+      operator: eq
+      expected: true
+      failure_example: false
+  - id: show_vlan
+    command: show vlan
+    aliases:
+    - sh vlan
+    definition: packs/arista_eos/commands/show_vlan.yaml
+    result_paths:
+    - vlans.total
+    - vlans.active
+    validation_hint:
+      path: vlans.active
+      operator: gte
+      expected: 1
+      failure_example: 0
+  - id: show_port_channel_summary
+    command: show port-channel summary
+    aliases:
+    - sh port-channel summary
+    definition: packs/arista_eos/commands/show_port_channel_summary.yaml
+    result_paths:
+    - aggregation.total
+    - aggregation.up
+    - aggregation.down
+    validation_hint:
+      path: aggregation.down
+      operator: eq
+      expected: 0
+      failure_example: 2
+  - id: show_ip_bgp_summary
+    command: show ip bgp summary
+    aliases:
+    - sh ip bgp summary
+    definition: packs/arista_eos/commands/show_ip_bgp_summary.yaml
+    result_paths:
+    - routing.peers_total
+    - routing.peers_established
+    - routing.established_ratio_pct
+    validation_hint:
+      path: routing.established_ratio_pct
+      operator: gte
+      expected: 95
+      failure_example: 62.5
+  - id: show_ip_ospf_neighbor
+    command: show ip ospf neighbor
+    aliases:
+    - sh ip ospf neighbor
+    definition: packs/arista_eos/commands/show_ip_ospf_neighbor.yaml
+    result_paths:
+    - routing.peers_total
+    - routing.peers_established
+    - routing.established_ratio_pct
+    validation_hint:
+      path: routing.established_ratio_pct
+      operator: gte
+      expected: 95
+      failure_example: 62.5
+  - id: show_mlag
+    command: show mlag
+    aliases:
+    - sh mlag
+    definition: packs/arista_eos/commands/show_mlag.yaml
+    result_paths:
+    - redundancy.state
+    - redundancy.peer_state
+    - redundancy.ready
+    validation_hint:
+      path: redundancy.ready
+      operator: eq
+      expected: true
+      failure_example: false
+  - id: show_inventory
+    command: show inventory
+    aliases:
+    - sh inventory
+    definition: packs/arista_eos/commands/show_inventory.yaml
+    result_paths:
+    - inventory.components
+    - inventory.missing_serials
+    - inventory.chassis_serial
+    validation_hint:
+      path: inventory.missing_serials
+      operator: eq
+      expected: 0
+      failure_example: 2
+  - id: show_environment_all
+    command: show environment all
+    aliases:
+    - sh environment all
+    definition: packs/arista_eos/commands/show_environment_all.yaml
+    result_paths:
+    - environment.temp_c
+    - environment.fans_ok
+    - environment.psus_ok
+    validation_hint:
+      path: environment.temp_c
+      operator: lte
+      expected: 75
+      failure_example: 93.0
+  - id: show_processes_top_once
+    command: show processes top once
+    aliases:
+    - sh processes top once
+    definition: packs/arista_eos/commands/show_processes_top_once.yaml
+    result_paths:
+    - resources.cpu_pct
+    - resources.load_5m
+    validation_hint:
+      path: resources.cpu_pct
+      operator: lte
+      expected: 80
+      failure_example: 98.1
+  - id: show_system_resources
+    command: show system resources
+    aliases:
+    - sh system resources
+    definition: packs/arista_eos/commands/show_system_resources.yaml
+    result_paths:
+    - resources.memory_used_pct
+    - resources.memory_free_mb
+    validation_hint:
+      path: resources.memory_used_pct
+      operator: lte
+      expected: 85
+      failure_example: 97.0
+  - id: show_logging_last_50
+    command: show logging last 50
+    aliases:
+    - sh logging last 50
+    definition: packs/arista_eos/commands/show_logging_last_50.yaml
+    result_paths:
+    - logging.critical_count
+    - logging.warning_count
+    - logging.last_event
+    validation_hint:
+      path: logging.critical_count
+      operator: eq
+      expected: 0
+      failure_example: 4
+  - id: show_clock
+    command: show clock
+    aliases:
+    - sh clock
+    definition: packs/arista_eos/commands/show_clock.yaml
+    result_paths:
+    - clock.iso8601
+    - clock.synced
+    - clock.offset_ms
+    validation_hint:
+      path: clock.synced
+      operator: eq
+      expected: true
+      failure_example: false
+  - id: show_running_config_hostname
+    command: show running-config | include hostname
+    aliases:
+    - sh running-config | include hostname
+    definition: packs/arista_eos/commands/show_running_config_hostname.yaml
+    result_paths:
+    - config.clean
+    - config.last_change_id
+    - config.age_minutes
+    validation_hint:
+      path: config.clean
+      operator: eq
+      expected: true
+      failure_example: false
+  - id: show_platform
+    command: show platform
+    aliases:
+    - sh platform
+    definition: packs/arista_eos/commands/show_platform.yaml
+    result_paths:
+    - hardware.modules_total
+    - hardware.modules_ok
+    - hardware.faulty_modules
+    validation_hint:
+      path: hardware.faulty_modules
+      operator: eq
+      expected: 0
+      failure_example: 1
+- id: juniper_junos
+  name: Juniper Junos
+  aliases:
+  - junos
+  - juniper-junos
+  commands:
+  - id: show_version
+    command: show version
+    aliases:
+    - sh version
+    definition: packs/juniper_junos/commands/show_version.yaml
+    result_paths:
+    - system.os_version
+    - system.image
+    - system.uptime_seconds
+    - system.oper_state
+    validation_hint:
+      path: system.oper_state
+      operator: eq
+      expected: up
+      failure_example: down
+  - id: show_interfaces_terse
+    command: show interfaces terse
+    aliases:
+    - sh interfaces terse
+    definition: packs/juniper_junos/commands/show_interfaces_terse.yaml
+    result_paths:
+    - interfaces.total
+    - interfaces.up
+    - interfaces.down
+    validation_hint:
+      path: interfaces.down
+      operator: lte
+      expected: 1
+      failure_example: 6
+  - id: show_interfaces_extensive
+    command: show interfaces extensive
+    aliases:
+    - sh interfaces extensive
+    definition: packs/juniper_junos/commands/show_interfaces_extensive.yaml
+    result_paths:
+    - interfaces.error_count
+    - interfaces.utilization_pct
+    - interfaces.mtu
+    validation_hint:
+      path: interfaces.error_count
+      operator: lte
+      expected: 0
+      failure_example: 14
+  - id: show_route_summary
+    command: show route summary
+    aliases:
+    - sh route summary
+    definition: packs/juniper_junos/commands/show_route_summary.yaml
+    result_paths:
+    - routes.total
+    - routes.default_present
+    - routes.stale
+    validation_hint:
+      path: routes.default_present
+      operator: eq
+      expected: true
+      failure_example: false
+  - id: show_arp_no_resolve
+    command: show arp no-resolve
+    aliases:
+    - sh arp no-resolve
+    definition: packs/juniper_junos/commands/show_arp_no_resolve.yaml
+    result_paths:
+    - arp.entries
+    - arp.incomplete
+    validation_hint:
+      path: arp.incomplete
+      operator: eq
+      expected: 0
+      failure_example: 5
+  - id: show_ethernet_switching_table
+    command: show ethernet-switching table
+    aliases:
+    - sh ethernet-switching table
+    definition: packs/juniper_junos/commands/show_ethernet_switching_table.yaml
+    result_paths:
+    - mac.entries
+    - mac.dynamic
+    validation_hint:
+      path: mac.entries
+      operator: gte
+      expected: 1
+      failure_example: 0
+  - id: show_lldp_neighbors_detail
+    command: show lldp neighbors detail
+    aliases:
+    - sh lldp neighbors detail
+    definition: packs/juniper_junos/commands/show_lldp_neighbors_detail.yaml
+    result_paths:
+    - neighbors.count
+    - neighbors.expected_count
+    - neighbors.expected_matches
+    validation_hint:
+      path: neighbors.expected_matches
+      operator: eq
+      expected: true
+      failure_example: false
+  - id: show_vlans
+    command: show vlans
+    aliases:
+    - sh vlans
+    definition: packs/juniper_junos/commands/show_vlans.yaml
+    result_paths:
+    - vlans.total
+    - vlans.active
+    validation_hint:
+      path: vlans.active
+      operator: gte
+      expected: 1
+      failure_example: 0
+  - id: show_lacp_interfaces
+    command: show lacp interfaces
+    aliases:
+    - sh lacp interfaces
+    definition: packs/juniper_junos/commands/show_lacp_interfaces.yaml
+    result_paths:
+    - aggregation.total
+    - aggregation.up
+    - aggregation.down
+    validation_hint:
+      path: aggregation.down
+      operator: eq
+      expected: 0
+      failure_example: 2
+  - id: show_bgp_summary
+    command: show bgp summary
+    aliases:
+    - sh bgp summary
+    definition: packs/juniper_junos/commands/show_bgp_summary.yaml
+    result_paths:
+    - routing.peers_total
+    - routing.peers_established
+    - routing.established_ratio_pct
+    validation_hint:
+      path: routing.established_ratio_pct
+      operator: gte
+      expected: 95
+      failure_example: 62.5
+  - id: show_ospf_neighbor
+    command: show ospf neighbor
+    aliases:
+    - sh ospf neighbor
+    definition: packs/juniper_junos/commands/show_ospf_neighbor.yaml
+    result_paths:
+    - routing.peers_total
+    - routing.peers_established
+    - routing.established_ratio_pct
+    validation_hint:
+      path: routing.established_ratio_pct
+      operator: gte
+      expected: 95
+      failure_example: 62.5
+  - id: show_chassis_routing_engine
+    command: show chassis routing-engine
+    aliases:
+    - sh chassis routing-engine
+    definition: packs/juniper_junos/commands/show_chassis_routing_engine.yaml
+    result_paths:
+    - redundancy.state
+    - redundancy.peer_state
+    - redundancy.ready
+    validation_hint:
+      path: redundancy.ready
+      operator: eq
+      expected: true
+      failure_example: false
+  - id: show_chassis_hardware
+    command: show chassis hardware
+    aliases:
+    - sh chassis hardware
+    definition: packs/juniper_junos/commands/show_chassis_hardware.yaml
+    result_paths:
+    - hardware.modules_total
+    - hardware.modules_ok
+    - hardware.faulty_modules
+    validation_hint:
+      path: hardware.faulty_modules
+      operator: eq
+      expected: 0
+      failure_example: 1
+  - id: show_chassis_environment
+    command: show chassis environment
+    aliases:
+    - sh chassis environment
+    definition: packs/juniper_junos/commands/show_chassis_environment.yaml
+    result_paths:
+    - environment.temp_c
+    - environment.fans_ok
+    - environment.psus_ok
+    validation_hint:
+      path: environment.temp_c
+      operator: lte
+      expected: 75
+      failure_example: 93.0
+  - id: show_system_processes_extensive
+    command: show system processes extensive
+    aliases:
+    - sh system processes extensive
+    definition: packs/juniper_junos/commands/show_system_processes_extensive.yaml
+    result_paths:
+    - resources.cpu_pct
+    - resources.load_5m
+    validation_hint:
+      path: resources.cpu_pct
+      operator: lte
+      expected: 80
+      failure_example: 98.1
+  - id: show_system_memory
+    command: show system memory
+    aliases:
+    - sh system memory
+    definition: packs/juniper_junos/commands/show_system_memory.yaml
+    result_paths:
+    - resources.memory_used_pct
+    - resources.memory_free_mb
+    validation_hint:
+      path: resources.memory_used_pct
+      operator: lte
+      expected: 85
+      failure_example: 97.0
+  - id: show_log_messages_last_50
+    command: show log messages | last 50
+    aliases:
+    - sh log messages | last 50
+    definition: packs/juniper_junos/commands/show_log_messages_last_50.yaml
+    result_paths:
+    - logging.critical_count
+    - logging.warning_count
+    - logging.last_event
+    validation_hint:
+      path: logging.critical_count
+      operator: eq
+      expected: 0
+      failure_example: 4
+  - id: show_system_uptime
+    command: show system uptime
+    aliases:
+    - sh system uptime
+    definition: packs/juniper_junos/commands/show_system_uptime.yaml
+    result_paths:
+    - clock.iso8601
+    - clock.synced
+    - clock.offset_ms
+    validation_hint:
+      path: clock.synced
+      operator: eq
+      expected: true
+      failure_example: false
+  - id: show_system_commit
+    command: show system commit
+    aliases:
+    - sh system commit
+    definition: packs/juniper_junos/commands/show_system_commit.yaml
+    result_paths:
+    - config.clean
+    - config.last_change_id
+    - config.age_minutes
+    validation_hint:
+      path: config.clean
+      operator: eq
+      expected: true
+      failure_example: false
+  - id: show_chassis_alarms
+    command: show chassis alarms
+    aliases:
+    - sh chassis alarms
+    definition: packs/juniper_junos/commands/show_chassis_alarms.yaml
+    result_paths:
+    - health.score
+    - health.status
+    - health.open_alerts
+    validation_hint:
+      path: health.score
+      operator: gte
+      expected: 90
+      failure_example: 44
+- id: f5_tmos
+  name: F5 BIG-IP TMOS
+  aliases:
+  - f5
+  - bigip
+  - big-ip
+  - tmos
+  commands:
+  - id: show_sys_version
+    command: show sys version
+    aliases:
+    - sh sys version
+    definition: packs/f5_tmos/commands/show_sys_version.yaml
+    result_paths:
+    - system.os_version
+    - system.image
+    - system.uptime_seconds
+    - system.oper_state
+    validation_hint:
+      path: system.oper_state
+      operator: eq
+      expected: up
+      failure_example: down
+  - id: show_net_interface
+    command: show net interface
+    aliases:
+    - sh net interface
+    definition: packs/f5_tmos/commands/show_net_interface.yaml
+    result_paths:
+    - interfaces.total
+    - interfaces.up
+    - interfaces.down
+    validation_hint:
+      path: interfaces.down
+      operator: lte
+      expected: 1
+      failure_example: 6
+  - id: show_net_interface_all_properties
+    command: show net interface all-properties
+    aliases:
+    - sh net interface all-properties
+    definition: packs/f5_tmos/commands/show_net_interface_all_properties.yaml
+    result_paths:
+    - interfaces.error_count
+    - interfaces.utilization_pct
+    - interfaces.mtu
+    validation_hint:
+      path: interfaces.error_count
+      operator: lte
+      expected: 0
+      failure_example: 14
+  - id: show_net_route
+    command: show net route
+    aliases:
+    - sh net route
+    definition: packs/f5_tmos/commands/show_net_route.yaml
+    result_paths:
+    - routes.total
+    - routes.default_present
+    - routes.stale
+    validation_hint:
+      path: routes.default_present
+      operator: eq
+      expected: true
+      failure_example: false
+  - id: show_net_arp
+    command: show net arp
+    aliases:
+    - sh net arp
+    definition: packs/f5_tmos/commands/show_net_arp.yaml
+    result_paths:
+    - arp.entries
+    - arp.incomplete
+    validation_hint:
+      path: arp.incomplete
+      operator: eq
+      expected: 0
+      failure_example: 5
+  - id: show_ltm_node
+    command: show ltm node
+    aliases:
+    - sh ltm node
+    definition: packs/f5_tmos/commands/show_ltm_node.yaml
+    result_paths:
+    - load_balancing.servers
+    - load_balancing.servers_up
+    - load_balancing.servers_down
+    validation_hint:
+      path: load_balancing.servers_down
+      operator: eq
+      expected: 0
+      failure_example: 4
+  - id: show_net_vlan
+    command: show net vlan
+    aliases:
+    - sh net vlan
+    definition: packs/f5_tmos/commands/show_net_vlan.yaml
+    result_paths:
+    - vlans.total
+    - vlans.active
+    validation_hint:
+      path: vlans.active
+      operator: gte
+      expected: 1
+      failure_example: 0
+  - id: show_ltm_pool_members
+    command: show ltm pool members
+    aliases:
+    - sh ltm pool members
+    definition: packs/f5_tmos/commands/show_ltm_pool_members.yaml
+    result_paths:
+    - load_balancing.members
+    - load_balancing.members_up
+    - load_balancing.members_down
+    validation_hint:
+      path: load_balancing.members_down
+      operator: lte
+      expected: 1
+      failure_example: 6
+  - id: show_ltm_virtual
+    command: show ltm virtual
+    aliases:
+    - sh ltm virtual
+    definition: packs/f5_tmos/commands/show_ltm_virtual.yaml
+    result_paths:
+    - load_balancing.virtual_servers
+    - load_balancing.virtual_servers_available
+    - load_balancing.virtual_servers_unavailable
+    validation_hint:
+      path: load_balancing.virtual_servers_unavailable
+      operator: eq
+      expected: 0
+      failure_example: 3
+  - id: show_ltm_pool
+    command: show ltm pool
+    aliases:
+    - sh ltm pool
+    definition: packs/f5_tmos/commands/show_ltm_pool.yaml
+    result_paths:
+    - load_balancing.pools
+    - load_balancing.pools_available
+    - load_balancing.pools_unavailable
+    validation_hint:
+      path: load_balancing.pools_unavailable
+      operator: eq
+      expected: 0
+      failure_example: 2
+  - id: show_ltm_monitor
+    command: show ltm monitor
+    aliases:
+    - sh ltm monitor
+    definition: packs/f5_tmos/commands/show_ltm_monitor.yaml
+    result_paths:
+    - load_balancing.monitors
+    - load_balancing.monitors_enabled
+    - load_balancing.monitors_failing
+    validation_hint:
+      path: load_balancing.monitors_failing
+      operator: eq
+      expected: 0
+      failure_example: 2
+  - id: show_sys_failover
+    command: show sys failover
+    aliases:
+    - sh sys failover
+    definition: packs/f5_tmos/commands/show_sys_failover.yaml
+    result_paths:
+    - redundancy.state
+    - redundancy.peer_state
+    - redundancy.ready
+    validation_hint:
+      path: redundancy.ready
+      operator: eq
+      expected: true
+      failure_example: false
+  - id: show_sys_hardware
+    command: show sys hardware
+    aliases:
+    - sh sys hardware
+    definition: packs/f5_tmos/commands/show_sys_hardware.yaml
+    result_paths:
+    - hardware.modules_total
+    - hardware.modules_ok
+    - hardware.faulty_modules
+    validation_hint:
+      path: hardware.faulty_modules
+      operator: eq
+      expected: 0
+      failure_example: 1
+  - id: show_sys_disk
+    command: show sys disk
+    aliases:
+    - sh sys disk
+    definition: packs/f5_tmos/commands/show_sys_disk.yaml
+    result_paths:
+    - storage.filesystems
+    - storage.max_used_pct
+    - storage.readonly_filesystems
+    validation_hint:
+      path: storage.max_used_pct
+      operator: lte
+      expected: 85
+      failure_example: 96.4
+  - id: show_sys_cpu
+    command: show sys cpu
+    aliases:
+    - sh sys cpu
+    definition: packs/f5_tmos/commands/show_sys_cpu.yaml
+    result_paths:
+    - resources.cpu_pct
+    - resources.load_5m
+    validation_hint:
+      path: resources.cpu_pct
+      operator: lte
+      expected: 80
+      failure_example: 98.1
+  - id: show_sys_memory
+    command: show sys memory
+    aliases:
+    - sh sys memory
+    definition: packs/f5_tmos/commands/show_sys_memory.yaml
+    result_paths:
+    - resources.memory_used_pct
+    - resources.memory_free_mb
+    validation_hint:
+      path: resources.memory_used_pct
+      operator: lte
+      expected: 85
+      failure_example: 97.0
+  - id: show_sys_log_ltm
+    command: show sys log ltm
+    aliases:
+    - sh sys log ltm
+    definition: packs/f5_tmos/commands/show_sys_log_ltm.yaml
+    result_paths:
+    - logging.critical_count
+    - logging.warning_count
+    - logging.last_event
+    validation_hint:
+      path: logging.critical_count
+      operator: eq
+      expected: 0
+      failure_example: 4
+  - id: show_sys_clock
+    command: show sys clock
+    aliases:
+    - sh sys clock
+    definition: packs/f5_tmos/commands/show_sys_clock.yaml
+    result_paths:
+    - clock.iso8601
+    - clock.synced
+    - clock.offset_ms
+    validation_hint:
+      path: clock.synced
+      operator: eq
+      expected: true
+      failure_example: false
+  - id: show_cm_device
+    command: show cm device
+    aliases:
+    - sh cm device
+    definition: packs/f5_tmos/commands/show_cm_device.yaml
+    result_paths:
+    - inventory.components
+    - inventory.missing_serials
+    - inventory.chassis_serial
+    validation_hint:
+      path: inventory.missing_serials
+      operator: eq
+      expected: 0
+      failure_example: 2
+  - id: show_cm_sync_status
+    command: show cm sync-status
+    aliases:
+    - sh cm sync-status
+    definition: packs/f5_tmos/commands/show_cm_sync_status.yaml
+    result_paths:
+    - redundancy.state
+    - redundancy.config_synced
+    - redundancy.ready
+    validation_hint:
+      path: redundancy.config_synced
+      operator: eq
+      expected: true
+      failure_example: false
+- id: citrix_adc
+  name: Citrix ADC / NetScaler
+  aliases:
+  - citrix
+  - netscaler
+  - citrix-adc
+  commands:
+  - id: show_ns_version
+    command: show ns version
+    aliases:
+    - sh ns version
+    definition: packs/citrix_adc/commands/show_ns_version.yaml
+    result_paths:
+    - system.os_version
+    - system.image
+    - system.uptime_seconds
+    - system.oper_state
+    validation_hint:
+      path: system.oper_state
+      operator: eq
+      expected: up
+      failure_example: down
+  - id: show_interface
+    command: show interface
+    aliases:
+    - sh interface
+    definition: packs/citrix_adc/commands/show_interface.yaml
+    result_paths:
+    - interfaces.total
+    - interfaces.up
+    - interfaces.down
+    validation_hint:
+      path: interfaces.down
+      operator: lte
+      expected: 1
+      failure_example: 6
+  - id: show_interface_detail
+    command: show interface -detail
+    aliases:
+    - sh interface -detail
+    definition: packs/citrix_adc/commands/show_interface_detail.yaml
+    result_paths:
+    - interfaces.error_count
+    - interfaces.utilization_pct
+    - interfaces.mtu
+    validation_hint:
+      path: interfaces.error_count
+      operator: lte
+      expected: 0
+      failure_example: 14
+  - id: show_route
+    command: show route
+    aliases:
+    - sh route
+    definition: packs/citrix_adc/commands/show_route.yaml
+    result_paths:
+    - routes.total
+    - routes.default_present
+    - routes.stale
+    validation_hint:
+      path: routes.default_present
+      operator: eq
+      expected: true
+      failure_example: false
+  - id: show_arp
+    command: show arp
+    aliases:
+    - sh arp
+    definition: packs/citrix_adc/commands/show_arp.yaml
+    result_paths:
+    - arp.entries
+    - arp.incomplete
+    validation_hint:
+      path: arp.incomplete
+      operator: eq
+      expected: 0
+      failure_example: 5
+  - id: show_ns_ip
+    command: show ns ip
+    aliases:
+    - sh ns ip
+    definition: packs/citrix_adc/commands/show_ns_ip.yaml
+    result_paths:
+    - neighbors.count
+    - neighbors.expected_count
+    - neighbors.expected_matches
+    validation_hint:
+      path: neighbors.expected_matches
+      operator: eq
+      expected: true
+      failure_example: false
+  - id: show_vlan
+    command: show vlan
+    aliases:
+    - sh vlan
+    definition: packs/citrix_adc/commands/show_vlan.yaml
+    result_paths:
+    - vlans.total
+    - vlans.active
+    validation_hint:
+      path: vlans.active
+      operator: gte
+      expected: 1
+      failure_example: 0
+  - id: show_servicegroup
+    command: show serviceGroup
+    aliases:
+    - sh serviceGroup
+    definition: packs/citrix_adc/commands/show_servicegroup.yaml
+    result_paths:
+    - load_balancing.pools
+    - load_balancing.pools_available
+    - load_balancing.pools_unavailable
+    validation_hint:
+      path: load_balancing.pools_unavailable
+      operator: eq
+      expected: 0
+      failure_example: 2
+  - id: show_lb_vserver
+    command: show lb vserver
+    aliases:
+    - sh lb vserver
+    definition: packs/citrix_adc/commands/show_lb_vserver.yaml
+    result_paths:
+    - load_balancing.virtual_servers
+    - load_balancing.virtual_servers_available
+    - load_balancing.virtual_servers_unavailable
+    validation_hint:
+      path: load_balancing.virtual_servers_unavailable
+      operator: eq
+      expected: 0
+      failure_example: 3
+  - id: show_service
+    command: show service
+    aliases:
+    - sh service
+    definition: packs/citrix_adc/commands/show_service.yaml
+    result_paths:
+    - load_balancing.members
+    - load_balancing.members_up
+    - load_balancing.members_down
+    validation_hint:
+      path: load_balancing.members_down
+      operator: lte
+      expected: 1
+      failure_example: 6
+  - id: show_lb_monitor
+    command: show lb monitor
+    aliases:
+    - sh lb monitor
+    definition: packs/citrix_adc/commands/show_lb_monitor.yaml
+    result_paths:
+    - load_balancing.monitors
+    - load_balancing.monitors_enabled
+    - load_balancing.monitors_failing
+    validation_hint:
+      path: load_balancing.monitors_failing
+      operator: eq
+      expected: 0
+      failure_example: 2
+  - id: show_ha_node
+    command: show ha node
+    aliases:
+    - sh ha node
+    definition: packs/citrix_adc/commands/show_ha_node.yaml
+    result_paths:
+    - redundancy.state
+    - redundancy.peer_state
+    - redundancy.ready
+    validation_hint:
+      path: redundancy.ready
+      operator: eq
+      expected: true
+      failure_example: false
+  - id: show_hardware
+    command: show hardware
+    aliases:
+    - sh hardware
+    definition: packs/citrix_adc/commands/show_hardware.yaml
+    result_paths:
+    - hardware.modules_total
+    - hardware.modules_ok
+    - hardware.faulty_modules
+    validation_hint:
+      path: hardware.faulty_modules
+      operator: eq
+      expected: 0
+      failure_example: 1
+  - id: show_cluster_instance
+    command: show cluster instance
+    aliases:
+    - sh cluster instance
+    definition: packs/citrix_adc/commands/show_cluster_instance.yaml
+    result_paths:
+    - redundancy.state
+    - redundancy.peer_state
+    - redundancy.ready
+    validation_hint:
+      path: redundancy.ready
+      operator: eq
+      expected: true
+      failure_example: false
+  - id: stat_system
+    command: stat system
+    aliases:
+    - stat system -fullValues
+    definition: packs/citrix_adc/commands/stat_system.yaml
+    result_paths:
+    - resources.cpu_pct
+    - resources.memory_used_pct
+    - resources.active_connections
+    validation_hint:
+      path: resources.cpu_pct
+      operator: lte
+      expected: 80
+      failure_example: 98.1
+  - id: stat_lb_vserver
+    command: stat lb vserver
+    aliases:
+    - stat lb vserver -fullValues
+    definition: packs/citrix_adc/commands/stat_lb_vserver.yaml
+    result_paths:
+    - load_balancing.virtual_servers
+    - load_balancing.virtual_servers_available
+    - load_balancing.virtual_servers_unavailable
+    validation_hint:
+      path: load_balancing.virtual_servers_unavailable
+      operator: eq
+      expected: 0
+      failure_example: 3
+  - id: show_audit_messages
+    command: show audit messages
+    aliases:
+    - sh audit messages
+    definition: packs/citrix_adc/commands/show_audit_messages.yaml
+    result_paths:
+    - logging.critical_count
+    - logging.warning_count
+    - logging.last_event
+    validation_hint:
+      path: logging.critical_count
+      operator: eq
+      expected: 0
+      failure_example: 4
+  - id: show_ns_mode
+    command: show ns mode
+    aliases:
+    - sh ns mode
+    definition: packs/citrix_adc/commands/show_ns_mode.yaml
+    result_paths:
+    - config.clean
+    - config.last_change_id
+    - config.age_minutes
+    validation_hint:
+      path: config.clean
+      operator: eq
+      expected: true
+      failure_example: false
+  - id: show_server
+    command: show server
+    aliases:
+    - sh server
+    definition: packs/citrix_adc/commands/show_server.yaml
+    result_paths:
+    - load_balancing.servers
+    - load_balancing.servers_up
+    - load_balancing.servers_down
+    validation_hint:
+      path: load_balancing.servers_down
+      operator: eq
+      expected: 0
+      failure_example: 4
+  - id: show_ns_runningconfig
+    command: show ns runningConfig
+    aliases:
+    - sh ns runningConfig
+    definition: packs/citrix_adc/commands/show_ns_runningconfig.yaml
+    result_paths:
+    - config.clean
+    - config.last_change_id
+    - config.age_minutes
+    validation_hint:
+      path: config.clean
+      operator: eq
+      expected: true
+      failure_example: false

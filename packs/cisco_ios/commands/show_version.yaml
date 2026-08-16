@@ -1,0 +1,127 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_version
+  title: Cisco IOS — show version
+  description: Deterministic synthetic, vendor-shaped response for show version on Cisco IOS; not captured output.
+  license: Apache-2.0
+  synthetic: true
+  category: system_version
+spec:
+  platform: cisco_ios
+  platform_aliases:
+  - ios
+  - cisco-ios
+  command: show version
+  aliases:
+  - sh version
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show version
+    os_version:
+      source: inventory.system.os_version
+    image:
+      source: inventory.system.image
+    uptime:
+      generator:
+        name: uptime_human
+        source: inventory.system.uptime_seconds
+    oper_state:
+      source: inventory.system.oper_state
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}#${command}
+    ${records}
+    Software version: ${os_version}
+    System image file: ${image}
+    System uptime: ${uptime}
+    Operating state: ${oper_state}
+  result_schema:
+  - path: system.os_version
+    type: string
+    source: inventory.system.os_version
+  - path: system.image
+    type: string
+    source: inventory.system.image
+  - path: system.uptime_seconds
+    type: integer
+    source: inventory.system.uptime_seconds
+  - path: system.oper_state
+    type: string
+    source: inventory.system.oper_state
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-cisco-ios-01
+      system:
+        os_version: 15.9(3)M-open
+        image: flash:open-ios-image.bin
+        uptime_seconds: 987654
+        oper_state: up
+      display:
+        records:
+        - Cisco Synthetic Network OS Software, RELEASE SOFTWARE
+        - 'Technical Support: https://example.invalid/opennv'
+        - Compiled Fri 16-Aug-26 00:00 by opennv-build
+        - 'ROM: Bootstrap program is OPENNV'
+        - Configuration register is 0x2102
+    expected_output: |
+      demo-cisco-ios-01#show version
+      Cisco Synthetic Network OS Software, RELEASE SOFTWARE
+      Technical Support: https://example.invalid/opennv
+      Compiled Fri 16-Aug-26 00:00 by opennv-build
+      ROM: Bootstrap program is OPENNV
+      Configuration register is 0x2102
+      Software version: 15.9(3)M-open
+      System image file: flash:open-ios-image.bin
+      System uptime: 11d 10:20:54
+      Operating state: up
+    expected_result:
+      system:
+        os_version: 15.9(3)M-open
+        image: flash:open-ios-image.bin
+        uptime_seconds: 987654
+        oper_state: up
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-cisco-ios-01
+      system:
+        os_version: 15.9(3)M-open
+        image: flash:open-ios-image.bin
+        uptime_seconds: 987654
+        oper_state: down
+      display:
+        records:
+        - Cisco Synthetic Network OS Software, RELEASE SOFTWARE
+        - 'Technical Support: https://example.invalid/opennv'
+        - Compiled Fri 16-Aug-26 00:00 by opennv-build
+        - 'ROM: Bootstrap program is OPENNV'
+        - Configuration register is 0x2102
+    expected_output: |
+      demo-cisco-ios-01#show version
+      Cisco Synthetic Network OS Software, RELEASE SOFTWARE
+      Technical Support: https://example.invalid/opennv
+      Compiled Fri 16-Aug-26 00:00 by opennv-build
+      ROM: Bootstrap program is OPENNV
+      Configuration register is 0x2102
+      Software version: 15.9(3)M-open
+      System image file: flash:open-ios-image.bin
+      System uptime: 11d 10:20:54
+      Operating state: down
+    expected_result:
+      system:
+        os_version: 15.9(3)M-open
+        image: flash:open-ios-image.bin
+        uptime_seconds: 987654
+        oper_state: down

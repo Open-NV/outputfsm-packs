@@ -1,0 +1,100 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_ethernet_switching_table
+  title: Juniper Junos — show ethernet-switching table
+  description: Deterministic synthetic, vendor-shaped response for show ethernet-switching table on Juniper Junos;
+    not captured output.
+  license: Apache-2.0
+  synthetic: true
+  category: mac
+spec:
+  platform: juniper_junos
+  platform_aliases:
+  - junos
+  - juniper-junos
+  command: show ethernet-switching table
+  aliases:
+  - sh ethernet-switching table
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show ethernet-switching table
+    entries:
+      source: inventory.mac.entries
+    dynamic:
+      source: inventory.mac.dynamic
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}> ${command}
+    ${records}
+    Total Mac Addresses for this criterion: ${entries}
+    Dynamic entries: ${dynamic}
+  result_schema:
+  - path: mac.entries
+    type: integer
+    source: inventory.mac.entries
+  - path: mac.dynamic
+    type: integer
+    source: inventory.mac.dynamic
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-juniper-junos-01
+      mac:
+        entries: 742
+        dynamic: 736
+      display:
+        records:
+        - MAC flags (S - static, D - dynamic, L - locally learned)
+        - 'Ethernet switching table : 742 entries, 742 learned'
+        - VLAN              MAC address       Type         Age Interfaces
+        - server-vlan       02:00:00:00:60:01 Learn          0 ge-0/0/2.0
+        - server-vlan       02:00:00:00:60:02 Learn          0 ae1.0
+    expected_output: |
+      demo-juniper-junos-01> show ethernet-switching table
+      MAC flags (S - static, D - dynamic, L - locally learned)
+      Ethernet switching table : 742 entries, 742 learned
+      VLAN              MAC address       Type         Age Interfaces
+      server-vlan       02:00:00:00:60:01 Learn          0 ge-0/0/2.0
+      server-vlan       02:00:00:00:60:02 Learn          0 ae1.0
+      Total Mac Addresses for this criterion: 742
+      Dynamic entries: 736
+    expected_result:
+      mac:
+        entries: 742
+        dynamic: 736
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-juniper-junos-01
+      mac:
+        entries: 0
+        dynamic: 0
+      display:
+        records:
+        - MAC flags (S - static, D - dynamic, L - locally learned)
+        - 'Ethernet switching table : 0 entries, 0 learned'
+        - VLAN              MAC address       Type         Age Interfaces
+        - No ethernet-switching entries found
+    expected_output: |
+      demo-juniper-junos-01> show ethernet-switching table
+      MAC flags (S - static, D - dynamic, L - locally learned)
+      Ethernet switching table : 0 entries, 0 learned
+      VLAN              MAC address       Type         Age Interfaces
+      No ethernet-switching entries found
+      Total Mac Addresses for this criterion: 0
+      Dynamic entries: 0
+    expected_result:
+      mac:
+        entries: 0
+        dynamic: 0

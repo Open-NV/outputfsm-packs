@@ -1,0 +1,285 @@
+id: f5_tmos
+name: F5 BIG-IP TMOS
+aliases:
+- f5
+- bigip
+- big-ip
+- tmos
+commands:
+- id: show_sys_version
+  command: show sys version
+  aliases:
+  - sh sys version
+  definition: packs/f5_tmos/commands/show_sys_version.yaml
+  result_paths:
+  - system.os_version
+  - system.image
+  - system.uptime_seconds
+  - system.oper_state
+  validation_hint:
+    path: system.oper_state
+    operator: eq
+    expected: up
+    failure_example: down
+- id: show_net_interface
+  command: show net interface
+  aliases:
+  - sh net interface
+  definition: packs/f5_tmos/commands/show_net_interface.yaml
+  result_paths:
+  - interfaces.total
+  - interfaces.up
+  - interfaces.down
+  validation_hint:
+    path: interfaces.down
+    operator: lte
+    expected: 1
+    failure_example: 6
+- id: show_net_interface_all_properties
+  command: show net interface all-properties
+  aliases:
+  - sh net interface all-properties
+  definition: packs/f5_tmos/commands/show_net_interface_all_properties.yaml
+  result_paths:
+  - interfaces.error_count
+  - interfaces.utilization_pct
+  - interfaces.mtu
+  validation_hint:
+    path: interfaces.error_count
+    operator: lte
+    expected: 0
+    failure_example: 14
+- id: show_net_route
+  command: show net route
+  aliases:
+  - sh net route
+  definition: packs/f5_tmos/commands/show_net_route.yaml
+  result_paths:
+  - routes.total
+  - routes.default_present
+  - routes.stale
+  validation_hint:
+    path: routes.default_present
+    operator: eq
+    expected: true
+    failure_example: false
+- id: show_net_arp
+  command: show net arp
+  aliases:
+  - sh net arp
+  definition: packs/f5_tmos/commands/show_net_arp.yaml
+  result_paths:
+  - arp.entries
+  - arp.incomplete
+  validation_hint:
+    path: arp.incomplete
+    operator: eq
+    expected: 0
+    failure_example: 5
+- id: show_ltm_node
+  command: show ltm node
+  aliases:
+  - sh ltm node
+  definition: packs/f5_tmos/commands/show_ltm_node.yaml
+  result_paths:
+  - load_balancing.servers
+  - load_balancing.servers_up
+  - load_balancing.servers_down
+  validation_hint:
+    path: load_balancing.servers_down
+    operator: eq
+    expected: 0
+    failure_example: 4
+- id: show_net_vlan
+  command: show net vlan
+  aliases:
+  - sh net vlan
+  definition: packs/f5_tmos/commands/show_net_vlan.yaml
+  result_paths:
+  - vlans.total
+  - vlans.active
+  validation_hint:
+    path: vlans.active
+    operator: gte
+    expected: 1
+    failure_example: 0
+- id: show_ltm_pool_members
+  command: show ltm pool members
+  aliases:
+  - sh ltm pool members
+  definition: packs/f5_tmos/commands/show_ltm_pool_members.yaml
+  result_paths:
+  - load_balancing.members
+  - load_balancing.members_up
+  - load_balancing.members_down
+  validation_hint:
+    path: load_balancing.members_down
+    operator: lte
+    expected: 1
+    failure_example: 6
+- id: show_ltm_virtual
+  command: show ltm virtual
+  aliases:
+  - sh ltm virtual
+  definition: packs/f5_tmos/commands/show_ltm_virtual.yaml
+  result_paths:
+  - load_balancing.virtual_servers
+  - load_balancing.virtual_servers_available
+  - load_balancing.virtual_servers_unavailable
+  validation_hint:
+    path: load_balancing.virtual_servers_unavailable
+    operator: eq
+    expected: 0
+    failure_example: 3
+- id: show_ltm_pool
+  command: show ltm pool
+  aliases:
+  - sh ltm pool
+  definition: packs/f5_tmos/commands/show_ltm_pool.yaml
+  result_paths:
+  - load_balancing.pools
+  - load_balancing.pools_available
+  - load_balancing.pools_unavailable
+  validation_hint:
+    path: load_balancing.pools_unavailable
+    operator: eq
+    expected: 0
+    failure_example: 2
+- id: show_ltm_monitor
+  command: show ltm monitor
+  aliases:
+  - sh ltm monitor
+  definition: packs/f5_tmos/commands/show_ltm_monitor.yaml
+  result_paths:
+  - load_balancing.monitors
+  - load_balancing.monitors_enabled
+  - load_balancing.monitors_failing
+  validation_hint:
+    path: load_balancing.monitors_failing
+    operator: eq
+    expected: 0
+    failure_example: 2
+- id: show_sys_failover
+  command: show sys failover
+  aliases:
+  - sh sys failover
+  definition: packs/f5_tmos/commands/show_sys_failover.yaml
+  result_paths:
+  - redundancy.state
+  - redundancy.peer_state
+  - redundancy.ready
+  validation_hint:
+    path: redundancy.ready
+    operator: eq
+    expected: true
+    failure_example: false
+- id: show_sys_hardware
+  command: show sys hardware
+  aliases:
+  - sh sys hardware
+  definition: packs/f5_tmos/commands/show_sys_hardware.yaml
+  result_paths:
+  - hardware.modules_total
+  - hardware.modules_ok
+  - hardware.faulty_modules
+  validation_hint:
+    path: hardware.faulty_modules
+    operator: eq
+    expected: 0
+    failure_example: 1
+- id: show_sys_disk
+  command: show sys disk
+  aliases:
+  - sh sys disk
+  definition: packs/f5_tmos/commands/show_sys_disk.yaml
+  result_paths:
+  - storage.filesystems
+  - storage.max_used_pct
+  - storage.readonly_filesystems
+  validation_hint:
+    path: storage.max_used_pct
+    operator: lte
+    expected: 85
+    failure_example: 96.4
+- id: show_sys_cpu
+  command: show sys cpu
+  aliases:
+  - sh sys cpu
+  definition: packs/f5_tmos/commands/show_sys_cpu.yaml
+  result_paths:
+  - resources.cpu_pct
+  - resources.load_5m
+  validation_hint:
+    path: resources.cpu_pct
+    operator: lte
+    expected: 80
+    failure_example: 98.1
+- id: show_sys_memory
+  command: show sys memory
+  aliases:
+  - sh sys memory
+  definition: packs/f5_tmos/commands/show_sys_memory.yaml
+  result_paths:
+  - resources.memory_used_pct
+  - resources.memory_free_mb
+  validation_hint:
+    path: resources.memory_used_pct
+    operator: lte
+    expected: 85
+    failure_example: 97.0
+- id: show_sys_log_ltm
+  command: show sys log ltm
+  aliases:
+  - sh sys log ltm
+  definition: packs/f5_tmos/commands/show_sys_log_ltm.yaml
+  result_paths:
+  - logging.critical_count
+  - logging.warning_count
+  - logging.last_event
+  validation_hint:
+    path: logging.critical_count
+    operator: eq
+    expected: 0
+    failure_example: 4
+- id: show_sys_clock
+  command: show sys clock
+  aliases:
+  - sh sys clock
+  definition: packs/f5_tmos/commands/show_sys_clock.yaml
+  result_paths:
+  - clock.iso8601
+  - clock.synced
+  - clock.offset_ms
+  validation_hint:
+    path: clock.synced
+    operator: eq
+    expected: true
+    failure_example: false
+- id: show_cm_device
+  command: show cm device
+  aliases:
+  - sh cm device
+  definition: packs/f5_tmos/commands/show_cm_device.yaml
+  result_paths:
+  - inventory.components
+  - inventory.missing_serials
+  - inventory.chassis_serial
+  validation_hint:
+    path: inventory.missing_serials
+    operator: eq
+    expected: 0
+    failure_example: 2
+- id: show_cm_sync_status
+  command: show cm sync-status
+  aliases:
+  - sh cm sync-status
+  definition: packs/f5_tmos/commands/show_cm_sync_status.yaml
+  result_paths:
+  - redundancy.state
+  - redundancy.config_synced
+  - redundancy.ready
+  validation_hint:
+    path: redundancy.config_synced
+    operator: eq
+    expected: true
+    failure_example: false

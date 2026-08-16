@@ -1,0 +1,113 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_hardware
+  title: Citrix ADC / NetScaler — show hardware
+  description: Deterministic synthetic, vendor-shaped response for show hardware on Citrix ADC / NetScaler; not
+    captured output.
+  license: Apache-2.0
+  synthetic: true
+  category: hardware
+spec:
+  platform: citrix_adc
+  platform_aliases:
+  - citrix
+  - netscaler
+  - citrix-adc
+  command: show hardware
+  aliases:
+  - sh hardware
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show hardware
+    modules:
+      source: inventory.hardware.modules_total
+    ok:
+      source: inventory.hardware.modules_ok
+    faulty:
+      source: inventory.hardware.faulty_modules
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    > ${command}
+    ${records}
+    Hardware summary: ${ok}/${modules} healthy, ${faulty} faulty
+  result_schema:
+  - path: hardware.modules_total
+    type: integer
+    source: inventory.hardware.modules_total
+  - path: hardware.modules_ok
+    type: integer
+    source: inventory.hardware.modules_ok
+  - path: hardware.faulty_modules
+    type: integer
+    source: inventory.hardware.faulty_modules
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-citrix-adc-01
+      hardware:
+        modules_total: 3
+        modules_ok: 3
+        faulty_modules: 0
+      display:
+        records:
+        - 'Platform: Citrix ADC virtual appliance (synthetic)'
+        - 'Manufactured on: 2026-08-16'
+        - 'CPU: 8 synthetic vCPU, Memory: 16384 MB'
+        - 'Host ID: OPENNV-SYN-0001'
+        - 'Hardware health: OK'
+        - Done
+    expected_output: |
+      > show hardware
+      Platform: Citrix ADC virtual appliance (synthetic)
+      Manufactured on: 2026-08-16
+      CPU: 8 synthetic vCPU, Memory: 16384 MB
+      Host ID: OPENNV-SYN-0001
+      Hardware health: OK
+      Done
+      Hardware summary: 3/3 healthy, 0 faulty
+    expected_result:
+      hardware:
+        modules_total: 3
+        modules_ok: 3
+        faulty_modules: 0
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-citrix-adc-01
+      hardware:
+        modules_total: 3
+        modules_ok: 2
+        faulty_modules: 1
+      display:
+        records:
+        - 'Platform: Citrix ADC virtual appliance (synthetic)'
+        - 'Manufactured on: 2026-08-16'
+        - 'CPU: 8 synthetic vCPU, Memory: 16384 MB'
+        - 'Host ID: OPENNV-SYN-0001'
+        - 'Hardware health: DEGRADED'
+        - Done
+    expected_output: |
+      > show hardware
+      Platform: Citrix ADC virtual appliance (synthetic)
+      Manufactured on: 2026-08-16
+      CPU: 8 synthetic vCPU, Memory: 16384 MB
+      Host ID: OPENNV-SYN-0001
+      Hardware health: DEGRADED
+      Done
+      Hardware summary: 2/3 healthy, 1 faulty
+    expected_result:
+      hardware:
+        modules_total: 3
+        modules_ok: 2
+        faulty_modules: 1

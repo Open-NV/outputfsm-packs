@@ -1,0 +1,98 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_arp_no_resolve
+  title: Juniper Junos — show arp no-resolve
+  description: Deterministic synthetic, vendor-shaped response for show arp no-resolve on Juniper Junos; not captured
+    output.
+  license: Apache-2.0
+  synthetic: true
+  category: arp
+spec:
+  platform: juniper_junos
+  platform_aliases:
+  - junos
+  - juniper-junos
+  command: show arp no-resolve
+  aliases:
+  - sh arp no-resolve
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show arp no-resolve
+    entries:
+      source: inventory.arp.entries
+    incomplete:
+      source: inventory.arp.incomplete
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}> ${command}
+    ${records}
+    Total entries: ${entries}
+    Incomplete entries: ${incomplete}
+  result_schema:
+  - path: arp.entries
+    type: integer
+    source: inventory.arp.entries
+  - path: arp.incomplete
+    type: integer
+    source: inventory.arp.incomplete
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-juniper-junos-01
+      arp:
+        entries: 96
+        incomplete: 0
+      display:
+        records:
+        - MAC Address       Address         Name                      Interface           Flags
+        - 02:00:00:00:50:01 192.0.2.2       192.0.2.2                 ge-0/0/0.0          none
+        - 02:00:00:00:50:02 10.0.0.20       10.0.0.20                 irb.100             none
+        - (incomplete)     198.51.100.2    198.51.100.2             ge-0/0/1.0          none
+    expected_output: |
+      demo-juniper-junos-01> show arp no-resolve
+      MAC Address       Address         Name                      Interface           Flags
+      02:00:00:00:50:01 192.0.2.2       192.0.2.2                 ge-0/0/0.0          none
+      02:00:00:00:50:02 10.0.0.20       10.0.0.20                 irb.100             none
+      (incomplete)     198.51.100.2    198.51.100.2             ge-0/0/1.0          none
+      Total entries: 96
+      Incomplete entries: 0
+    expected_result:
+      arp:
+        entries: 96
+        incomplete: 0
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-juniper-junos-01
+      arp:
+        entries: 96
+        incomplete: 5
+      display:
+        records:
+        - MAC Address       Address         Name                      Interface           Flags
+        - 02:00:00:00:50:01 192.0.2.2       192.0.2.2                 ge-0/0/0.0          none
+        - 02:00:00:00:50:02 10.0.0.20       10.0.0.20                 irb.100             none
+        - (incomplete)     198.51.100.2    198.51.100.2             ge-0/0/1.0          none
+    expected_output: |
+      demo-juniper-junos-01> show arp no-resolve
+      MAC Address       Address         Name                      Interface           Flags
+      02:00:00:00:50:01 192.0.2.2       192.0.2.2                 ge-0/0/0.0          none
+      02:00:00:00:50:02 10.0.0.20       10.0.0.20                 irb.100             none
+      (incomplete)     198.51.100.2    198.51.100.2             ge-0/0/1.0          none
+      Total entries: 96
+      Incomplete entries: 5
+    expected_result:
+      arp:
+        entries: 96
+        incomplete: 5

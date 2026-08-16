@@ -1,0 +1,121 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_cm_device
+  title: F5 BIG-IP TMOS — show cm device
+  description: Deterministic synthetic, vendor-shaped response for show cm device on F5 BIG-IP TMOS; not captured
+    output.
+  license: Apache-2.0
+  synthetic: true
+  category: inventory
+spec:
+  platform: f5_tmos
+  platform_aliases:
+  - f5
+  - bigip
+  - big-ip
+  - tmos
+  command: show cm device
+  aliases:
+  - sh cm device
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show cm device
+    components:
+      source: inventory.inventory_state.components
+    missing_serials:
+      source: inventory.inventory_state.missing_serials
+    serial:
+      source: inventory.inventory_state.chassis_serial
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}(active)(/Common)(tmos)# ${command}
+    ${records}
+    Inventory summary: ${components} components, ${missing_serials} missing serials
+    Chassis serial: ${serial}
+  result_schema:
+  - path: inventory.components
+    type: integer
+    source: inventory.inventory_state.components
+  - path: inventory.missing_serials
+    type: integer
+    source: inventory.inventory_state.missing_serials
+  - path: inventory.chassis_serial
+    type: string
+    source: inventory.inventory_state.chassis_serial
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-f5-tmos-01
+      inventory_state:
+        components: 7
+        missing_serials: 0
+        chassis_serial: OPENNV-SYN-0001
+      display:
+        records:
+        - 'Cm::Device: /Common/demo-f5-tmos-01'
+        - Hostname                     demo-f5-tmos-01.example.invalid
+        - Management IP                192.0.2.10
+        - ConfigSync IP                192.0.2.10
+        - Mirror IP                    10.0.0.10
+        - Failover State               active
+        - Device Trust                 connected
+    expected_output: |
+      demo-f5-tmos-01(active)(/Common)(tmos)# show cm device
+      Cm::Device: /Common/demo-f5-tmos-01
+      Hostname                     demo-f5-tmos-01.example.invalid
+      Management IP                192.0.2.10
+      ConfigSync IP                192.0.2.10
+      Mirror IP                    10.0.0.10
+      Failover State               active
+      Device Trust                 connected
+      Inventory summary: 7 components, 0 missing serials
+      Chassis serial: OPENNV-SYN-0001
+    expected_result:
+      inventory:
+        components: 7
+        missing_serials: 0
+        chassis_serial: OPENNV-SYN-0001
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-f5-tmos-01
+      inventory_state:
+        components: 7
+        missing_serials: 2
+        chassis_serial: OPENNV-SYN-0001
+      display:
+        records:
+        - 'Cm::Device: /Common/demo-f5-tmos-01'
+        - Hostname                     demo-f5-tmos-01.example.invalid
+        - Management IP                192.0.2.10
+        - ConfigSync IP                192.0.2.10
+        - Mirror IP                    10.0.0.10
+        - Failover State               active
+        - Device Trust                 disconnected
+    expected_output: |
+      demo-f5-tmos-01(active)(/Common)(tmos)# show cm device
+      Cm::Device: /Common/demo-f5-tmos-01
+      Hostname                     demo-f5-tmos-01.example.invalid
+      Management IP                192.0.2.10
+      ConfigSync IP                192.0.2.10
+      Mirror IP                    10.0.0.10
+      Failover State               active
+      Device Trust                 disconnected
+      Inventory summary: 7 components, 2 missing serials
+      Chassis serial: OPENNV-SYN-0001
+    expected_result:
+      inventory:
+        components: 7
+        missing_serials: 2
+        chassis_serial: OPENNV-SYN-0001

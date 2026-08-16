@@ -1,0 +1,117 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_archive_config_differences
+  title: Cisco IOS XE — show archive config differences
+  description: Deterministic synthetic, vendor-shaped response for show archive config differences on Cisco IOS
+    XE; not captured output.
+  license: Apache-2.0
+  synthetic: true
+  category: config_state
+spec:
+  platform: cisco_iosxe
+  platform_aliases:
+  - iosxe
+  - ios-xe
+  - cisco-ios-xe
+  command: show archive config differences
+  aliases:
+  - sh archive config differences
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show archive config differences
+    clean:
+      generator:
+        name: yes_no
+        source: inventory.config.clean
+    change:
+      source: inventory.config.last_change_id
+    age:
+      source: inventory.config.age_minutes
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}#${command}
+    ${records}
+    Configuration clean: ${clean}
+    Last change: ${change}
+    Configuration age: ${age} minutes
+  result_schema:
+  - path: config.clean
+    type: boolean
+    source: inventory.config.clean
+  - path: config.last_change_id
+    type: string
+    source: inventory.config.last_change_id
+  - path: config.age_minutes
+    type: integer
+    source: inventory.config.age_minutes
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-cisco-iosxe-01
+      config:
+        clean: true
+        last_change_id: demo-change-0042
+        age_minutes: 19
+      display:
+        records:
+        - 'Contextual Config Diffs:'
+        - '! No changes were found'
+        - '! Running and startup configuration are aligned'
+        - '! Archive comparison complete'
+        - End of Config Diffs
+    expected_output: |
+      demo-cisco-iosxe-01#show archive config differences
+      Contextual Config Diffs:
+      ! No changes were found
+      ! Running and startup configuration are aligned
+      ! Archive comparison complete
+      End of Config Diffs
+      Configuration clean: yes
+      Last change: demo-change-0042
+      Configuration age: 19 minutes
+    expected_result:
+      config:
+        clean: true
+        last_change_id: demo-change-0042
+        age_minutes: 19
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-cisco-iosxe-01
+      config:
+        clean: false
+        last_change_id: demo-change-pending
+        age_minutes: 2
+      display:
+        records:
+        - 'Contextual Config Diffs:'
+        - '! Candidate archive differs from running configuration'
+        - -interface GigabitEthernet1/0/2
+        - + shutdown
+        - End of Config Diffs
+    expected_output: |
+      demo-cisco-iosxe-01#show archive config differences
+      Contextual Config Diffs:
+      ! Candidate archive differs from running configuration
+      -interface GigabitEthernet1/0/2
+      + shutdown
+      End of Config Diffs
+      Configuration clean: no
+      Last change: demo-change-pending
+      Configuration age: 2 minutes
+    expected_result:
+      config:
+        clean: false
+        last_change_id: demo-change-pending
+        age_minutes: 2

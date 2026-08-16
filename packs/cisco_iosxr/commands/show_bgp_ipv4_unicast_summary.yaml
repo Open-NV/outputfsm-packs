@@ -1,0 +1,112 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_bgp_ipv4_unicast_summary
+  title: Cisco IOS XR — show bgp ipv4 unicast summary
+  description: Deterministic synthetic, vendor-shaped response for show bgp ipv4 unicast summary on Cisco IOS XR;
+    not captured output.
+  license: Apache-2.0
+  synthetic: true
+  category: routing_peers
+spec:
+  platform: cisco_iosxr
+  platform_aliases:
+  - iosxr
+  - ios-xr
+  - cisco-ios-xr
+  command: show bgp ipv4 unicast summary
+  aliases:
+  - sh bgp ipv4 unicast summary
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show bgp ipv4 unicast summary
+    peers:
+      source: inventory.routing.peers_total
+    established:
+      source: inventory.routing.peers_established
+    ratio:
+      generator:
+        name: percent
+        source: inventory.routing.established_ratio_pct
+        precision: 1
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    RP/0/RP0/CPU0:${hostname}#${command}
+    ${records}
+    Peer summary: ${established}/${peers} established (${ratio})
+  result_schema:
+  - path: routing.peers_total
+    type: integer
+    source: inventory.routing.peers_total
+  - path: routing.peers_established
+    type: integer
+    source: inventory.routing.peers_established
+  - path: routing.established_ratio_pct
+    type: number
+    source: inventory.routing.established_ratio_pct
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-cisco-iosxr-01
+      routing:
+        peers_total: 8
+        peers_established: 8
+        established_ratio_pct: 100.0
+      display:
+        records:
+        - BGP router identifier 203.0.113.11, local AS number 65000
+        - BGP table version is 417, main routing table version 417
+        - Neighbor        V    AS MsgRcvd MsgSent TblVer InQ OutQ Up/Down  State/PfxRcd
+        - 192.0.2.2       4 64512   88421   87112    417   0    0 2d03h            128
+        - 198.51.100.2    4 64513   12004   11998    417   0    0 00:04:12 64
+    expected_output: |
+      RP/0/RP0/CPU0:demo-cisco-iosxr-01#show bgp ipv4 unicast summary
+      BGP router identifier 203.0.113.11, local AS number 65000
+      BGP table version is 417, main routing table version 417
+      Neighbor        V    AS MsgRcvd MsgSent TblVer InQ OutQ Up/Down  State/PfxRcd
+      192.0.2.2       4 64512   88421   87112    417   0    0 2d03h            128
+      198.51.100.2    4 64513   12004   11998    417   0    0 00:04:12 64
+      Peer summary: 8/8 established (100.0%)
+    expected_result:
+      routing:
+        peers_total: 8
+        peers_established: 8
+        established_ratio_pct: 100.0
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-cisco-iosxr-01
+      routing:
+        peers_total: 8
+        peers_established: 5
+        established_ratio_pct: 62.5
+      display:
+        records:
+        - BGP router identifier 203.0.113.11, local AS number 65000
+        - BGP table version is 417, main routing table version 417
+        - Neighbor        V    AS MsgRcvd MsgSent TblVer InQ OutQ Up/Down  State/PfxRcd
+        - 192.0.2.2       4 64512   88421   87112    417   0    0 2d03h            128
+        - 198.51.100.2    4 64513   12004   11998    417   0    0 00:04:12 Active
+    expected_output: |
+      RP/0/RP0/CPU0:demo-cisco-iosxr-01#show bgp ipv4 unicast summary
+      BGP router identifier 203.0.113.11, local AS number 65000
+      BGP table version is 417, main routing table version 417
+      Neighbor        V    AS MsgRcvd MsgSent TblVer InQ OutQ Up/Down  State/PfxRcd
+      192.0.2.2       4 64512   88421   87112    417   0    0 2d03h            128
+      198.51.100.2    4 64513   12004   11998    417   0    0 00:04:12 Active
+      Peer summary: 5/8 established (62.5%)
+    expected_result:
+      routing:
+        peers_total: 8
+        peers_established: 5
+        established_ratio_pct: 62.5

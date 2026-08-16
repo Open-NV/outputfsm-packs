@@ -1,0 +1,122 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_ltm_virtual
+  title: F5 BIG-IP TMOS — show ltm virtual
+  description: Deterministic synthetic, vendor-shaped response for show ltm virtual on F5 BIG-IP TMOS; not captured
+    output.
+  license: Apache-2.0
+  synthetic: true
+  category: lb_virtual
+spec:
+  platform: f5_tmos
+  platform_aliases:
+  - f5
+  - bigip
+  - big-ip
+  - tmos
+  command: show ltm virtual
+  aliases:
+  - sh ltm virtual
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show ltm virtual
+    virtuals:
+      source: inventory.load_balancing.virtual_servers
+    available:
+      source: inventory.load_balancing.virtual_servers_available
+    unavailable:
+      source: inventory.load_balancing.virtual_servers_unavailable
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}(active)(/Common)(tmos)# ${command}
+    ${records}
+    Virtual server summary: ${available}/${virtuals} available, ${unavailable} unavailable
+  result_schema:
+  - path: load_balancing.virtual_servers
+    type: integer
+    source: inventory.load_balancing.virtual_servers
+  - path: load_balancing.virtual_servers_available
+    type: integer
+    source: inventory.load_balancing.virtual_servers_available
+  - path: load_balancing.virtual_servers_unavailable
+    type: integer
+    source: inventory.load_balancing.virtual_servers_unavailable
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-f5-tmos-01
+      load_balancing:
+        virtual_servers: 12
+        virtual_servers_available: 12
+        virtual_servers_unavailable: 0
+      display:
+        records:
+        - 'Ltm::Virtual Server: /Common/app_https'
+        - '  Availability     : available'
+        - '  State            : enabled'
+        - '  Destination      : /Common/192.0.2.100:443'
+        - '  Ip Protocol      : tcp'
+        - '  Ltm::Pool        : /Common/app_pool'
+        - '  Profiles         : /Common/tcp, /Common/clientssl, /Common/http'
+        - '  Source Address Translation: automap'
+    expected_output: |
+      demo-f5-tmos-01(active)(/Common)(tmos)# show ltm virtual
+      Ltm::Virtual Server: /Common/app_https
+        Availability     : available
+        State            : enabled
+        Destination      : /Common/192.0.2.100:443
+        Ip Protocol      : tcp
+        Ltm::Pool        : /Common/app_pool
+        Profiles         : /Common/tcp, /Common/clientssl, /Common/http
+        Source Address Translation: automap
+      Virtual server summary: 12/12 available, 0 unavailable
+    expected_result:
+      load_balancing:
+        virtual_servers: 12
+        virtual_servers_available: 12
+        virtual_servers_unavailable: 0
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-f5-tmos-01
+      load_balancing:
+        virtual_servers: 12
+        virtual_servers_available: 9
+        virtual_servers_unavailable: 3
+      display:
+        records:
+        - 'Ltm::Virtual Server: /Common/app_https'
+        - '  Availability     : unavailable'
+        - '  State            : disabled'
+        - '  Destination      : /Common/192.0.2.100:443'
+        - '  Ip Protocol      : tcp'
+        - '  Ltm::Pool        : /Common/app_pool'
+        - '  Profiles         : /Common/tcp, /Common/clientssl, /Common/http'
+        - '  Source Address Translation: automap'
+    expected_output: |
+      demo-f5-tmos-01(active)(/Common)(tmos)# show ltm virtual
+      Ltm::Virtual Server: /Common/app_https
+        Availability     : unavailable
+        State            : disabled
+        Destination      : /Common/192.0.2.100:443
+        Ip Protocol      : tcp
+        Ltm::Pool        : /Common/app_pool
+        Profiles         : /Common/tcp, /Common/clientssl, /Common/http
+        Source Address Translation: automap
+      Virtual server summary: 9/12 available, 3 unavailable
+    expected_result:
+      load_balancing:
+        virtual_servers: 12
+        virtual_servers_available: 9
+        virtual_servers_unavailable: 3

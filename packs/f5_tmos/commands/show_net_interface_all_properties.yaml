@@ -1,0 +1,123 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_net_interface_all_properties
+  title: F5 BIG-IP TMOS — show net interface all-properties
+  description: Deterministic synthetic, vendor-shaped response for show net interface all-properties on F5 BIG-IP
+    TMOS; not captured output.
+  license: Apache-2.0
+  synthetic: true
+  category: interface_detail
+spec:
+  platform: f5_tmos
+  platform_aliases:
+  - f5
+  - bigip
+  - big-ip
+  - tmos
+  command: show net interface all-properties
+  aliases:
+  - sh net interface all-properties
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show net interface all-properties
+    error_count:
+      source: inventory.interfaces.error_count
+    utilization:
+      generator:
+        name: percent
+        source: inventory.interfaces.utilization_pct
+        precision: 1
+    mtu:
+      source: inventory.interfaces.mtu
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}(active)(/Common)(tmos)# ${command}
+    ${records}
+      MTU ${mtu} bytes
+      Peak utilization ${utilization}
+      Aggregate input/output errors ${error_count}
+  result_schema:
+  - path: interfaces.error_count
+    type: integer
+    source: inventory.interfaces.error_count
+  - path: interfaces.utilization_pct
+    type: number
+    source: inventory.interfaces.utilization_pct
+  - path: interfaces.mtu
+    type: integer
+    source: inventory.interfaces.mtu
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-f5-tmos-01
+      interfaces:
+        error_count: 0
+        utilization_pct: 31.2
+        mtu: 1500
+      display:
+        records:
+        - Net::Interface
+        - Name  Status  Bits In  Bits Out  Drops  Errors  Media
+        - 1.1   up     312.0M   184.0M    0      0      10000T-FD
+        - '  Mac Address  02:00:00:00:20:01'
+        - '  Flow Control tx-rx'
+        - '  Lldp Admin   txonly'
+    expected_output: |
+      demo-f5-tmos-01(active)(/Common)(tmos)# show net interface all-properties
+      Net::Interface
+      Name  Status  Bits In  Bits Out  Drops  Errors  Media
+      1.1   up     312.0M   184.0M    0      0      10000T-FD
+        Mac Address  02:00:00:00:20:01
+        Flow Control tx-rx
+        Lldp Admin   txonly
+        MTU 1500 bytes
+        Peak utilization 31.2%
+        Aggregate input/output errors 0
+    expected_result:
+      interfaces:
+        error_count: 0
+        utilization_pct: 31.2
+        mtu: 1500
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-f5-tmos-01
+      interfaces:
+        error_count: 14
+        utilization_pct: 97.8
+        mtu: 1500
+      display:
+        records:
+        - Net::Interface
+        - Name  Status  Bits In  Bits Out  Drops  Errors  Media
+        - 1.1   down   312.0M   184.0M    0      14     10000T-FD
+        - '  Mac Address  02:00:00:00:20:01'
+        - '  Flow Control tx-rx'
+        - '  Lldp Admin   txonly'
+    expected_output: |
+      demo-f5-tmos-01(active)(/Common)(tmos)# show net interface all-properties
+      Net::Interface
+      Name  Status  Bits In  Bits Out  Drops  Errors  Media
+      1.1   down   312.0M   184.0M    0      14     10000T-FD
+        Mac Address  02:00:00:00:20:01
+        Flow Control tx-rx
+        Lldp Admin   txonly
+        MTU 1500 bytes
+        Peak utilization 97.8%
+        Aggregate input/output errors 14
+    expected_result:
+      interfaces:
+        error_count: 14
+        utilization_pct: 97.8
+        mtu: 1500

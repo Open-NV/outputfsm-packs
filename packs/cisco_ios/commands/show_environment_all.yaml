@@ -1,0 +1,118 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_environment_all
+  title: Cisco IOS — show environment all
+  description: Deterministic synthetic, vendor-shaped response for show environment all on Cisco IOS; not captured
+    output.
+  license: Apache-2.0
+  synthetic: true
+  category: environment
+spec:
+  platform: cisco_ios
+  platform_aliases:
+  - ios
+  - cisco-ios
+  command: show environment all
+  aliases:
+  - sh environment all
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show environment all
+    temperature:
+      source: inventory.environment.temp_c
+    fans_ok:
+      generator:
+        name: yes_no
+        source: inventory.environment.fans_ok
+    psus_ok:
+      generator:
+        name: yes_no
+        source: inventory.environment.psus_ok
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}#${command}
+    ${records}
+    Peak temperature: ${temperature} C
+    Fans healthy: ${fans_ok}
+    Power supplies healthy: ${psus_ok}
+  result_schema:
+  - path: environment.temp_c
+    type: number
+    source: inventory.environment.temp_c
+  - path: environment.fans_ok
+    type: boolean
+    source: inventory.environment.fans_ok
+  - path: environment.psus_ok
+    type: boolean
+    source: inventory.environment.psus_ok
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-cisco-ios-01
+      environment:
+        temp_c: 39.5
+        fans_ok: true
+        psus_ok: true
+      display:
+        records:
+        - Sensor                Location          State          Reading
+        - Inlet temperature     Chassis           ok             39.5 C
+        - Fan tray 1             Chassis           ok             7200 RPM
+        - Power supply 1         Chassis           ok             12.1 V
+        - Power supply 2         Chassis           ok             12.0 V
+    expected_output: |
+      demo-cisco-ios-01#show environment all
+      Sensor                Location          State          Reading
+      Inlet temperature     Chassis           ok             39.5 C
+      Fan tray 1             Chassis           ok             7200 RPM
+      Power supply 1         Chassis           ok             12.1 V
+      Power supply 2         Chassis           ok             12.0 V
+      Peak temperature: 39.5 C
+      Fans healthy: yes
+      Power supplies healthy: yes
+    expected_result:
+      environment:
+        temp_c: 39.5
+        fans_ok: true
+        psus_ok: true
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-cisco-ios-01
+      environment:
+        temp_c: 93.0
+        fans_ok: false
+        psus_ok: false
+      display:
+        records:
+        - Sensor                Location          State          Reading
+        - Inlet temperature     Chassis           critical       93.0 C
+        - Fan tray 1             Chassis           failed         0 RPM
+        - Power supply 1         Chassis           failed         0 V
+        - Power supply 2         Chassis           ok             12.0 V
+    expected_output: |
+      demo-cisco-ios-01#show environment all
+      Sensor                Location          State          Reading
+      Inlet temperature     Chassis           critical       93.0 C
+      Fan tray 1             Chassis           failed         0 RPM
+      Power supply 1         Chassis           failed         0 V
+      Power supply 2         Chassis           ok             12.0 V
+      Peak temperature: 93.0 C
+      Fans healthy: no
+      Power supplies healthy: no
+    expected_result:
+      environment:
+        temp_c: 93.0
+        fans_ok: false
+        psus_ok: false

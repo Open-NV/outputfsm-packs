@@ -1,0 +1,34 @@
+name: Definition or renderer bug
+description: Report a reproducible catalog, fixture, schema, or safe-renderer defect.
+title: "bug: "
+labels: [bug, needs-triage]
+body:
+  - type: markdown
+    attributes:
+      value: Use synthetic evidence only. Report vulnerabilities through the private security process.
+  - type: input
+    id: identity
+    attributes:
+      label: Platform and command ID
+      placeholder: cisco_ios / show_version
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Observed and expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Minimal synthetic reproduction
+    validations:
+      required: true
+  - type: input
+    id: revision
+    attributes:
+      label: Pack revision
+      placeholder: Commit SHA or release tag
+    validations:
+      required: true

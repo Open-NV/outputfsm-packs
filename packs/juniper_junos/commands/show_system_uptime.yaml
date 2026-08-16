@@ -1,0 +1,116 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_system_uptime
+  title: Juniper Junos — show system uptime
+  description: Deterministic synthetic, vendor-shaped response for show system uptime on Juniper Junos; not captured
+    output.
+  license: Apache-2.0
+  synthetic: true
+  category: clock
+spec:
+  platform: juniper_junos
+  platform_aliases:
+  - junos
+  - juniper-junos
+  command: show system uptime
+  aliases:
+  - sh system uptime
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show system uptime
+    clock:
+      source: inventory.clock.iso8601
+    synced:
+      generator:
+        name: yes_no
+        source: inventory.clock.synced
+    offset:
+      source: inventory.clock.offset_ms
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}> ${command}
+    ${records}
+    Current time: ${clock}
+    Synchronized: ${synced}
+    Offset: ${offset} ms
+  result_schema:
+  - path: clock.iso8601
+    type: string
+    source: inventory.clock.iso8601
+  - path: clock.synced
+    type: boolean
+    source: inventory.clock.synced
+  - path: clock.offset_ms
+    type: number
+    source: inventory.clock.offset_ms
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-juniper-junos-01
+      clock:
+        iso8601: '2026-08-16T07:00:00Z'
+        synced: true
+        offset_ms: 1.4
+      display:
+        records:
+        - Time source is NTP
+        - 'Clock state: synchronized'
+        - 'Reference clock: 192.0.2.123'
+        - 'Reference status: reachable'
+        - 'Timezone: UTC (offset 0 seconds)'
+    expected_output: |
+      demo-juniper-junos-01> show system uptime
+      Time source is NTP
+      Clock state: synchronized
+      Reference clock: 192.0.2.123
+      Reference status: reachable
+      Timezone: UTC (offset 0 seconds)
+      Current time: 2026-08-16T07:00:00Z
+      Synchronized: yes
+      Offset: 1.4 ms
+    expected_result:
+      clock:
+        iso8601: '2026-08-16T07:00:00Z'
+        synced: true
+        offset_ms: 1.4
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-juniper-junos-01
+      clock:
+        iso8601: '2026-08-16T07:00:00Z'
+        synced: false
+        offset_ms: 1802.0
+      display:
+        records:
+        - Time source is NTP
+        - 'Clock state: unsynchronized'
+        - 'Reference clock: 192.0.2.123'
+        - 'Reference status: unreachable'
+        - 'Timezone: UTC (offset 0 seconds)'
+    expected_output: |
+      demo-juniper-junos-01> show system uptime
+      Time source is NTP
+      Clock state: unsynchronized
+      Reference clock: 192.0.2.123
+      Reference status: unreachable
+      Timezone: UTC (offset 0 seconds)
+      Current time: 2026-08-16T07:00:00Z
+      Synchronized: no
+      Offset: 1802.0 ms
+    expected_result:
+      clock:
+        iso8601: '2026-08-16T07:00:00Z'
+        synced: false
+        offset_ms: 1802.0

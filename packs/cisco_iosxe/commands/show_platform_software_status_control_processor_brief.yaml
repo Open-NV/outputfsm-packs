@@ -1,0 +1,106 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_platform_software_status_control_processor_brief
+  title: Cisco IOS XE — show platform software status control-processor brief
+  description: Deterministic synthetic, vendor-shaped response for show platform software status control-processor
+    brief on Cisco IOS XE; not captured output.
+  license: Apache-2.0
+  synthetic: true
+  category: memory
+spec:
+  platform: cisco_iosxe
+  platform_aliases:
+  - iosxe
+  - ios-xe
+  - cisco-ios-xe
+  command: show platform software status control-processor brief
+  aliases:
+  - sh platform software status control-processor brief
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show platform software status control-processor brief
+    memory:
+      generator:
+        name: percent
+        source: inventory.resources.memory_used_pct
+        precision: 1
+    free_mb:
+      source: inventory.resources.memory_free_mb
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}#${command}
+    ${records}
+    Memory used: ${memory}
+    Memory free: ${free_mb} MB
+  result_schema:
+  - path: resources.memory_used_pct
+    type: number
+    source: inventory.resources.memory_used_pct
+  - path: resources.memory_free_mb
+    type: integer
+    source: inventory.resources.memory_free_mb
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-cisco-iosxe-01
+      resources:
+        memory_used_pct: 48.7
+        memory_free_mb: 4096
+      display:
+        records:
+        - Memory statistics (synthetic)
+        - Pool             Total(MB)  Used(MB)  Free(MB)  Used%
+        - System               8192      4096    4096      48.7%
+        - Packet buffers       1024         384       640   37.5%
+        - Control plane        2048         912      1136   44.5%
+    expected_output: |
+      demo-cisco-iosxe-01#show platform software status control-processor brief
+      Memory statistics (synthetic)
+      Pool             Total(MB)  Used(MB)  Free(MB)  Used%
+      System               8192      4096    4096      48.7%
+      Packet buffers       1024         384       640   37.5%
+      Control plane        2048         912      1136   44.5%
+      Memory used: 48.7%
+      Memory free: 4096 MB
+    expected_result:
+      resources:
+        memory_used_pct: 48.7
+        memory_free_mb: 4096
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-cisco-iosxe-01
+      resources:
+        memory_used_pct: 97.0
+        memory_free_mb: 128
+      display:
+        records:
+        - Memory statistics (synthetic)
+        - Pool             Total(MB)  Used(MB)  Free(MB)  Used%
+        - System               8192      8064    128       97.0%
+        - Packet buffers       1024         384       640   37.5%
+        - Control plane        2048         912      1136   44.5%
+    expected_output: |
+      demo-cisco-iosxe-01#show platform software status control-processor brief
+      Memory statistics (synthetic)
+      Pool             Total(MB)  Used(MB)  Free(MB)  Used%
+      System               8192      8064    128       97.0%
+      Packet buffers       1024         384       640   37.5%
+      Control plane        2048         912      1136   44.5%
+      Memory used: 97.0%
+      Memory free: 128 MB
+    expected_result:
+      resources:
+        memory_used_pct: 97.0
+        memory_free_mb: 128

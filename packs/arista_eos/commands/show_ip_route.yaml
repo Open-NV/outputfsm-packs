@@ -1,0 +1,112 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_ip_route
+  title: Arista EOS — show ip route
+  description: Deterministic synthetic, vendor-shaped response for show ip route on Arista EOS; not captured output.
+  license: Apache-2.0
+  synthetic: true
+  category: routes
+spec:
+  platform: arista_eos
+  platform_aliases:
+  - eos
+  - arista-eos
+  command: show ip route
+  aliases:
+  - sh ip route
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show ip route
+    route_total:
+      source: inventory.routes.total
+    default_present:
+      generator:
+        name: yes_no
+        source: inventory.routes.default_present
+    stale:
+      source: inventory.routes.stale
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}#${command}
+    ${records}
+    Route summary: ${route_total} total, ${stale} stale
+    Default route present: ${default_present}
+  result_schema:
+  - path: routes.total
+    type: integer
+    source: inventory.routes.total
+  - path: routes.default_present
+    type: boolean
+    source: inventory.routes.default_present
+  - path: routes.stale
+    type: integer
+    source: inventory.routes.stale
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-arista-eos-01
+      routes:
+        total: 128
+        default_present: true
+        stale: 0
+      display:
+        records:
+        - 'Codes: C - connected, S - static, O - OSPF, B - BGP'
+        - Gateway of last resort is 192.0.2.254 to network 0.0.0.0
+        - S*    0.0.0.0/0 [1/0] via 192.0.2.254
+        - C     10.0.0.0/24 is directly connected, Vlan100
+        - O     198.51.100.0/24 [110/20] via 192.0.2.2, 00:04:12, Ethernet1
+    expected_output: |
+      demo-arista-eos-01#show ip route
+      Codes: C - connected, S - static, O - OSPF, B - BGP
+      Gateway of last resort is 192.0.2.254 to network 0.0.0.0
+      S*    0.0.0.0/0 [1/0] via 192.0.2.254
+      C     10.0.0.0/24 is directly connected, Vlan100
+      O     198.51.100.0/24 [110/20] via 192.0.2.2, 00:04:12, Ethernet1
+      Route summary: 128 total, 0 stale
+      Default route present: yes
+    expected_result:
+      routes:
+        total: 128
+        default_present: true
+        stale: 0
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-arista-eos-01
+      routes:
+        total: 118
+        default_present: false
+        stale: 9
+      display:
+        records:
+        - 'Codes: C - connected, S - static, O - OSPF, B - BGP'
+        - Gateway of last resort is not set
+        - '% No candidate default route is installed'
+        - C     10.0.0.0/24 is directly connected, Vlan100
+        - O     198.51.100.0/24 [110/20] via 192.0.2.2, 00:04:12, down
+    expected_output: |
+      demo-arista-eos-01#show ip route
+      Codes: C - connected, S - static, O - OSPF, B - BGP
+      Gateway of last resort is not set
+      % No candidate default route is installed
+      C     10.0.0.0/24 is directly connected, Vlan100
+      O     198.51.100.0/24 [110/20] via 192.0.2.2, 00:04:12, down
+      Route summary: 118 total, 9 stale
+      Default route present: no
+    expected_result:
+      routes:
+        total: 118
+        default_present: false
+        stale: 9

@@ -1,0 +1,111 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_sys_cpu
+  title: F5 BIG-IP TMOS — show sys cpu
+  description: Deterministic synthetic, vendor-shaped response for show sys cpu on F5 BIG-IP TMOS; not captured
+    output.
+  license: Apache-2.0
+  synthetic: true
+  category: cpu
+spec:
+  platform: f5_tmos
+  platform_aliases:
+  - f5
+  - bigip
+  - big-ip
+  - tmos
+  command: show sys cpu
+  aliases:
+  - sh sys cpu
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show sys cpu
+    cpu:
+      generator:
+        name: percent
+        source: inventory.resources.cpu_pct
+        precision: 1
+    load:
+      source: inventory.resources.load_5m
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}(active)(/Common)(tmos)# ${command}
+    ${records}
+    CPU utilization: ${cpu}
+    Five-minute load: ${load}
+  result_schema:
+  - path: resources.cpu_pct
+    type: number
+    source: inventory.resources.cpu_pct
+  - path: resources.load_5m
+    type: number
+    source: inventory.resources.load_5m
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-f5-tmos-01
+      resources:
+        cpu_pct: 22.4
+        load_5m: 0.42
+      display:
+        records:
+        - Sys::Performance System
+        - System CPU Usage                 Current  Average  Max(since 00:00)
+        - Utilization                       22.4%    20.1%    22.4%
+        - Load average (5 minute)            0.42     0.38     0.42
+        - TMM CPU                            18.4%    17.9%    31.0%
+        - Analysis plane                     1.4%     1.1%     2.0%
+    expected_output: |
+      demo-f5-tmos-01(active)(/Common)(tmos)# show sys cpu
+      Sys::Performance System
+      System CPU Usage                 Current  Average  Max(since 00:00)
+      Utilization                       22.4%    20.1%    22.4%
+      Load average (5 minute)            0.42     0.38     0.42
+      TMM CPU                            18.4%    17.9%    31.0%
+      Analysis plane                     1.4%     1.1%     2.0%
+      CPU utilization: 22.4%
+      Five-minute load: 0.42
+    expected_result:
+      resources:
+        cpu_pct: 22.4
+        load_5m: 0.42
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-f5-tmos-01
+      resources:
+        cpu_pct: 98.1
+        load_5m: 17.9
+      display:
+        records:
+        - Sys::Performance System
+        - System CPU Usage                 Current  Average  Max(since 00:00)
+        - Utilization                       98.1%    20.1%    98.1%
+        - Load average (5 minute)            17.90     0.38     17.90
+        - TMM CPU                            96.2%    17.9%    99.1%
+        - Analysis plane                     1.4%     1.1%     2.0%
+    expected_output: |
+      demo-f5-tmos-01(active)(/Common)(tmos)# show sys cpu
+      Sys::Performance System
+      System CPU Usage                 Current  Average  Max(since 00:00)
+      Utilization                       98.1%    20.1%    98.1%
+      Load average (5 minute)            17.90     0.38     17.90
+      TMM CPU                            96.2%    17.9%    99.1%
+      Analysis plane                     1.4%     1.1%     2.0%
+      CPU utilization: 98.1%
+      Five-minute load: 17.9
+    expected_result:
+      resources:
+        cpu_pct: 98.1
+        load_5m: 17.9

@@ -1,0 +1,129 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_ns_version
+  title: Citrix ADC / NetScaler — show ns version
+  description: Deterministic synthetic, vendor-shaped response for show ns version on Citrix ADC / NetScaler; not
+    captured output.
+  license: Apache-2.0
+  synthetic: true
+  category: system_version
+spec:
+  platform: citrix_adc
+  platform_aliases:
+  - citrix
+  - netscaler
+  - citrix-adc
+  command: show ns version
+  aliases:
+  - sh ns version
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show ns version
+    os_version:
+      source: inventory.system.os_version
+    image:
+      source: inventory.system.image
+    uptime:
+      generator:
+        name: uptime_human
+        source: inventory.system.uptime_seconds
+    oper_state:
+      source: inventory.system.oper_state
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    > ${command}
+    NetScaler NS version: ${os_version}
+    Build image: ${image}
+    ${records}
+    Uptime: ${uptime}
+    Operating state: ${oper_state}
+  result_schema:
+  - path: system.os_version
+    type: string
+    source: inventory.system.os_version
+  - path: system.image
+    type: string
+    source: inventory.system.image
+  - path: system.uptime_seconds
+    type: integer
+    source: inventory.system.uptime_seconds
+  - path: system.oper_state
+    type: string
+    source: inventory.system.oper_state
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-citrix-adc-01
+      system:
+        os_version: 14.1-open
+        image: open-citrixadc-build.tgz
+        uptime_seconds: 987654
+        oper_state: up
+      display:
+        records:
+        - NetScaler NS synthetic build
+        - Done
+        - 'Kernel: synthetic 64-bit'
+        - 'Platform: Citrix ADC virtual appliance'
+        - 'Serial Number: OPENNV-ADC-0001'
+    expected_output: |
+      > show ns version
+      NetScaler NS version: 14.1-open
+      Build image: open-citrixadc-build.tgz
+      NetScaler NS synthetic build
+      Done
+      Kernel: synthetic 64-bit
+      Platform: Citrix ADC virtual appliance
+      Serial Number: OPENNV-ADC-0001
+      Uptime: 11d 10:20:54
+      Operating state: up
+    expected_result:
+      system:
+        os_version: 14.1-open
+        image: open-citrixadc-build.tgz
+        uptime_seconds: 987654
+        oper_state: up
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-citrix-adc-01
+      system:
+        os_version: 14.1-open
+        image: open-citrixadc-build.tgz
+        uptime_seconds: 987654
+        oper_state: down
+      display:
+        records:
+        - NetScaler NS synthetic build
+        - Done
+        - 'Kernel: synthetic 64-bit'
+        - 'Platform: Citrix ADC virtual appliance'
+        - 'Serial Number: OPENNV-ADC-0001'
+    expected_output: |
+      > show ns version
+      NetScaler NS version: 14.1-open
+      Build image: open-citrixadc-build.tgz
+      NetScaler NS synthetic build
+      Done
+      Kernel: synthetic 64-bit
+      Platform: Citrix ADC virtual appliance
+      Serial Number: OPENNV-ADC-0001
+      Uptime: 11d 10:20:54
+      Operating state: down
+    expected_result:
+      system:
+        os_version: 14.1-open
+        image: open-citrixadc-build.tgz
+        uptime_seconds: 987654
+        oper_state: down

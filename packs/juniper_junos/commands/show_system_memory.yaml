@@ -1,0 +1,109 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_system_memory
+  title: Juniper Junos — show system memory
+  description: Deterministic synthetic, vendor-shaped response for show system memory on Juniper Junos; not captured
+    output.
+  license: Apache-2.0
+  synthetic: true
+  category: memory
+spec:
+  platform: juniper_junos
+  platform_aliases:
+  - junos
+  - juniper-junos
+  command: show system memory
+  aliases:
+  - sh system memory
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show system memory
+    memory:
+      generator:
+        name: percent
+        source: inventory.resources.memory_used_pct
+        precision: 1
+    free_mb:
+      source: inventory.resources.memory_free_mb
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}> ${command}
+    ${records}
+    Memory used: ${memory}
+    Memory free: ${free_mb} MB
+  result_schema:
+  - path: resources.memory_used_pct
+    type: number
+    source: inventory.resources.memory_used_pct
+  - path: resources.memory_free_mb
+    type: integer
+    source: inventory.resources.memory_free_mb
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-juniper-junos-01
+      resources:
+        memory_used_pct: 48.7
+        memory_free_mb: 4096
+      display:
+        records:
+        - 'System memory usage distribution:'
+        - Item                         Total (MB)   Used (MB)   Utilization
+        - Routing engine memory             8192        3990       48.7%
+        - Kernel memory                 1024         512         50.0%
+        - Routing protocol memory       2048         912         44.5%
+        - 'Free memory: 4096 MB'
+    expected_output: |
+      demo-juniper-junos-01> show system memory
+      System memory usage distribution:
+      Item                         Total (MB)   Used (MB)   Utilization
+      Routing engine memory             8192        3990       48.7%
+      Kernel memory                 1024         512         50.0%
+      Routing protocol memory       2048         912         44.5%
+      Free memory: 4096 MB
+      Memory used: 48.7%
+      Memory free: 4096 MB
+    expected_result:
+      resources:
+        memory_used_pct: 48.7
+        memory_free_mb: 4096
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-juniper-junos-01
+      resources:
+        memory_used_pct: 97.0
+        memory_free_mb: 128
+      display:
+        records:
+        - 'System memory usage distribution:'
+        - Item                         Total (MB)   Used (MB)   Utilization
+        - Routing engine memory             8192        8064       97.0%
+        - Kernel memory                 1024         512         50.0%
+        - Routing protocol memory       2048         912         44.5%
+        - 'Free memory: 128 MB'
+    expected_output: |
+      demo-juniper-junos-01> show system memory
+      System memory usage distribution:
+      Item                         Total (MB)   Used (MB)   Utilization
+      Routing engine memory             8192        8064       97.0%
+      Kernel memory                 1024         512         50.0%
+      Routing protocol memory       2048         912         44.5%
+      Free memory: 128 MB
+      Memory used: 97.0%
+      Memory free: 128 MB
+    expected_result:
+      resources:
+        memory_used_pct: 97.0
+        memory_free_mb: 128

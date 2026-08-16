@@ -1,0 +1,106 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_processes_cpu
+  title: Cisco IOS XR — show processes cpu
+  description: Deterministic synthetic, vendor-shaped response for show processes cpu on Cisco IOS XR; not captured
+    output.
+  license: Apache-2.0
+  synthetic: true
+  category: cpu
+spec:
+  platform: cisco_iosxr
+  platform_aliases:
+  - iosxr
+  - ios-xr
+  - cisco-ios-xr
+  command: show processes cpu
+  aliases:
+  - sh processes cpu
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show processes cpu
+    cpu:
+      generator:
+        name: percent
+        source: inventory.resources.cpu_pct
+        precision: 1
+    load:
+      source: inventory.resources.load_5m
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    RP/0/RP0/CPU0:${hostname}#${command}
+    ${records}
+    CPU utilization: ${cpu}
+    Five-minute load: ${load}
+  result_schema:
+  - path: resources.cpu_pct
+    type: number
+    source: inventory.resources.cpu_pct
+  - path: resources.load_5m
+    type: number
+    source: inventory.resources.load_5m
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-cisco-iosxr-01
+      resources:
+        cpu_pct: 22.4
+        load_5m: 0.42
+      display:
+        records:
+        - 'CPU utilization for five seconds: synthetic; one minute: synthetic; five minutes: synthetic'
+        - PID    Runtime(ms) Invoked  uSecs  5Sec   1Min   5Min  TTY Process
+        - 101          9234   44211    208   22.4%  20.0%  18.0%   0 Routing
+        - 202          4401   88120     49   1.2%   1.0%   0.9%   0 Interface
+        - 303          1182   22300     53  0.2%   0.2%   0.1%   0 SyntheticWorker
+    expected_output: |
+      RP/0/RP0/CPU0:demo-cisco-iosxr-01#show processes cpu
+      CPU utilization for five seconds: synthetic; one minute: synthetic; five minutes: synthetic
+      PID    Runtime(ms) Invoked  uSecs  5Sec   1Min   5Min  TTY Process
+      101          9234   44211    208   22.4%  20.0%  18.0%   0 Routing
+      202          4401   88120     49   1.2%   1.0%   0.9%   0 Interface
+      303          1182   22300     53  0.2%   0.2%   0.1%   0 SyntheticWorker
+      CPU utilization: 22.4%
+      Five-minute load: 0.42
+    expected_result:
+      resources:
+        cpu_pct: 22.4
+        load_5m: 0.42
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-cisco-iosxr-01
+      resources:
+        cpu_pct: 98.1
+        load_5m: 17.9
+      display:
+        records:
+        - 'CPU utilization for five seconds: synthetic; one minute: synthetic; five minutes: synthetic'
+        - PID    Runtime(ms) Invoked  uSecs  5Sec   1Min   5Min  TTY Process
+        - 101          9234   44211    208   98.1%  20.0%  18.0%   0 Routing
+        - 202          4401   88120     49   1.2%   1.0%   0.9%   0 Interface
+        - 303          1182   22300     53  71.0%   0.2%   0.1%   0 SyntheticWorker
+    expected_output: |
+      RP/0/RP0/CPU0:demo-cisco-iosxr-01#show processes cpu
+      CPU utilization for five seconds: synthetic; one minute: synthetic; five minutes: synthetic
+      PID    Runtime(ms) Invoked  uSecs  5Sec   1Min   5Min  TTY Process
+      101          9234   44211    208   98.1%  20.0%  18.0%   0 Routing
+      202          4401   88120     49   1.2%   1.0%   0.9%   0 Interface
+      303          1182   22300     53  71.0%   0.2%   0.1%   0 SyntheticWorker
+      CPU utilization: 98.1%
+      Five-minute load: 17.9
+    expected_result:
+      resources:
+        cpu_pct: 98.1
+        load_5m: 17.9

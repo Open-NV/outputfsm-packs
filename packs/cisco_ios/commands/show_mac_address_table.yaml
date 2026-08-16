@@ -1,0 +1,102 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_mac_address_table
+  title: Cisco IOS — show mac address-table
+  description: Deterministic synthetic, vendor-shaped response for show mac address-table on Cisco IOS; not captured
+    output.
+  license: Apache-2.0
+  synthetic: true
+  category: mac
+spec:
+  platform: cisco_ios
+  platform_aliases:
+  - ios
+  - cisco-ios
+  command: show mac address-table
+  aliases:
+  - sh mac address-table
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show mac address-table
+    entries:
+      source: inventory.mac.entries
+    dynamic:
+      source: inventory.mac.dynamic
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}#${command}
+    ${records}
+    Total Mac Addresses for this criterion: ${entries}
+    Dynamic entries: ${dynamic}
+  result_schema:
+  - path: mac.entries
+    type: integer
+    source: inventory.mac.entries
+  - path: mac.dynamic
+    type: integer
+    source: inventory.mac.dynamic
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-cisco-ios-01
+      mac:
+        entries: 742
+        dynamic: 736
+      display:
+        records:
+        - '          Mac Address Table'
+        - '-------------------------------------------'
+        - Vlan    Mac Address       Type        Ports
+        - ' 100    0200.0000.6001    DYNAMIC     Ethernet1'
+        - ' 100    0200.0000.6002    DYNAMIC     Port-channel10'
+        - ' 200    0200.0000.6003    DYNAMIC     Ethernet2'
+    expected_output: |
+      demo-cisco-ios-01#show mac address-table
+                Mac Address Table
+      -------------------------------------------
+      Vlan    Mac Address       Type        Ports
+       100    0200.0000.6001    DYNAMIC     Ethernet1
+       100    0200.0000.6002    DYNAMIC     Port-channel10
+       200    0200.0000.6003    DYNAMIC     Ethernet2
+      Total Mac Addresses for this criterion: 742
+      Dynamic entries: 736
+    expected_result:
+      mac:
+        entries: 742
+        dynamic: 736
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-cisco-ios-01
+      mac:
+        entries: 0
+        dynamic: 0
+      display:
+        records:
+        - '          Mac Address Table'
+        - '-------------------------------------------'
+        - Vlan    Mac Address       Type        Ports
+        - No dynamic or static MAC addresses present
+    expected_output: |
+      demo-cisco-ios-01#show mac address-table
+                Mac Address Table
+      -------------------------------------------
+      Vlan    Mac Address       Type        Ports
+      No dynamic or static MAC addresses present
+      Total Mac Addresses for this criterion: 0
+      Dynamic entries: 0
+    expected_result:
+      mac:
+        entries: 0
+        dynamic: 0

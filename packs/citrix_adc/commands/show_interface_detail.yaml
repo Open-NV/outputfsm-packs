@@ -1,0 +1,122 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_interface_detail
+  title: Citrix ADC / NetScaler — show interface -detail
+  description: Deterministic synthetic, vendor-shaped response for show interface -detail on Citrix ADC / NetScaler;
+    not captured output.
+  license: Apache-2.0
+  synthetic: true
+  category: interface_detail
+spec:
+  platform: citrix_adc
+  platform_aliases:
+  - citrix
+  - netscaler
+  - citrix-adc
+  command: show interface -detail
+  aliases:
+  - sh interface -detail
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show interface -detail
+    error_count:
+      source: inventory.interfaces.error_count
+    utilization:
+      generator:
+        name: percent
+        source: inventory.interfaces.utilization_pct
+        precision: 1
+    mtu:
+      source: inventory.interfaces.mtu
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    > ${command}
+    ${records}
+      MTU ${mtu} bytes
+      Peak utilization ${utilization}
+      Aggregate input/output errors ${error_count}
+  result_schema:
+  - path: interfaces.error_count
+    type: integer
+    source: inventory.interfaces.error_count
+  - path: interfaces.utilization_pct
+    type: number
+    source: inventory.interfaces.utilization_pct
+  - path: interfaces.mtu
+    type: integer
+    source: inventory.interfaces.mtu
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-citrix-adc-01
+      interfaces:
+        error_count: 0
+        utilization_pct: 31.2
+        mtu: 1500
+      display:
+        records:
+        - 1) Interface 1/1
+        - '   state: UP, link state: UP, speed: 10000, duplex: FULL'
+        - '   MAC: 02:00:00:00:30:01, flow control: OFF'
+        - '   RX packets: 1242100, TX packets: 1198830'
+        - '   RX errors: 0, TX errors: 0'
+        - Done
+    expected_output: |
+      > show interface -detail
+      1) Interface 1/1
+         state: UP, link state: UP, speed: 10000, duplex: FULL
+         MAC: 02:00:00:00:30:01, flow control: OFF
+         RX packets: 1242100, TX packets: 1198830
+         RX errors: 0, TX errors: 0
+      Done
+        MTU 1500 bytes
+        Peak utilization 31.2%
+        Aggregate input/output errors 0
+    expected_result:
+      interfaces:
+        error_count: 0
+        utilization_pct: 31.2
+        mtu: 1500
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-citrix-adc-01
+      interfaces:
+        error_count: 14
+        utilization_pct: 97.8
+        mtu: 1500
+      display:
+        records:
+        - 1) Interface 1/1
+        - '   state: DOWN, link state: DOWN, speed: 10000, duplex: FULL'
+        - '   MAC: 02:00:00:00:30:01, flow control: OFF'
+        - '   RX packets: 1242100, TX packets: 1198830'
+        - '   RX errors: 14, TX errors: 0'
+        - Done
+    expected_output: |
+      > show interface -detail
+      1) Interface 1/1
+         state: DOWN, link state: DOWN, speed: 10000, duplex: FULL
+         MAC: 02:00:00:00:30:01, flow control: OFF
+         RX packets: 1242100, TX packets: 1198830
+         RX errors: 14, TX errors: 0
+      Done
+        MTU 1500 bytes
+        Peak utilization 97.8%
+        Aggregate input/output errors 14
+    expected_result:
+      interfaces:
+        error_count: 14
+        utilization_pct: 97.8
+        mtu: 1500

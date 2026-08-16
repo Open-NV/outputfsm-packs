@@ -1,0 +1,113 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_sys_disk
+  title: F5 BIG-IP TMOS — show sys disk
+  description: Deterministic synthetic, vendor-shaped response for show sys disk on F5 BIG-IP TMOS; not captured
+    output.
+  license: Apache-2.0
+  synthetic: true
+  category: storage
+spec:
+  platform: f5_tmos
+  platform_aliases:
+  - f5
+  - bigip
+  - big-ip
+  - tmos
+  command: show sys disk
+  aliases:
+  - sh sys disk
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show sys disk
+    filesystems:
+      source: inventory.storage.filesystems
+    max_used:
+      generator:
+        name: percent
+        source: inventory.storage.max_used_pct
+        precision: 1
+    readonly:
+      source: inventory.storage.readonly_filesystems
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}(active)(/Common)(tmos)# ${command}
+    ${records}
+    Filesystem summary: ${filesystems} filesystems, max used ${max_used}, ${readonly} read-only
+  result_schema:
+  - path: storage.filesystems
+    type: integer
+    source: inventory.storage.filesystems
+  - path: storage.max_used_pct
+    type: number
+    source: inventory.storage.max_used_pct
+  - path: storage.readonly_filesystems
+    type: integer
+    source: inventory.storage.readonly_filesystems
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-f5-tmos-01
+      storage:
+        filesystems: 6
+        max_used_pct: 61.3
+        readonly_filesystems: 0
+      display:
+        records:
+        - Sys::Disk
+        - Filesystem                  Size  Used  Avail  Use%  Mounted on
+        - /dev/mapper/vg--db           20G   8G   12G    61.3%  /var/lib/mysql
+        - /dev/mapper/vg--log          10G    3G     7G   30.0%  /var/log
+        - /dev/mapper/vg--config        4G    1G     3G   25.0%  /config
+    expected_output: |
+      demo-f5-tmos-01(active)(/Common)(tmos)# show sys disk
+      Sys::Disk
+      Filesystem                  Size  Used  Avail  Use%  Mounted on
+      /dev/mapper/vg--db           20G   8G   12G    61.3%  /var/lib/mysql
+      /dev/mapper/vg--log          10G    3G     7G   30.0%  /var/log
+      /dev/mapper/vg--config        4G    1G     3G   25.0%  /config
+      Filesystem summary: 6 filesystems, max used 61.3%, 0 read-only
+    expected_result:
+      storage:
+        filesystems: 6
+        max_used_pct: 61.3
+        readonly_filesystems: 0
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-f5-tmos-01
+      storage:
+        filesystems: 6
+        max_used_pct: 96.4
+        readonly_filesystems: 1
+      display:
+        records:
+        - Sys::Disk
+        - Filesystem                  Size  Used  Avail  Use%  Mounted on
+        - /dev/mapper/vg--db           20G   19G  1G     96.4%  /var/lib/mysql
+        - /dev/mapper/vg--log          10G    3G     7G   30.0%  /var/log
+        - /dev/mapper/vg--config        4G    1G     3G   25.0%  /config (read-only)
+    expected_output: |
+      demo-f5-tmos-01(active)(/Common)(tmos)# show sys disk
+      Sys::Disk
+      Filesystem                  Size  Used  Avail  Use%  Mounted on
+      /dev/mapper/vg--db           20G   19G  1G     96.4%  /var/lib/mysql
+      /dev/mapper/vg--log          10G    3G     7G   30.0%  /var/log
+      /dev/mapper/vg--config        4G    1G     3G   25.0%  /config (read-only)
+      Filesystem summary: 6 filesystems, max used 96.4%, 1 read-only
+    expected_result:
+      storage:
+        filesystems: 6
+        max_used_pct: 96.4
+        readonly_filesystems: 1

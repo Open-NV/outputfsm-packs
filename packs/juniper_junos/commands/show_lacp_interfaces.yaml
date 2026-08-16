@@ -1,0 +1,108 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_lacp_interfaces
+  title: Juniper Junos — show lacp interfaces
+  description: Deterministic synthetic, vendor-shaped response for show lacp interfaces on Juniper Junos; not captured
+    output.
+  license: Apache-2.0
+  synthetic: true
+  category: aggregation
+spec:
+  platform: juniper_junos
+  platform_aliases:
+  - junos
+  - juniper-junos
+  command: show lacp interfaces
+  aliases:
+  - sh lacp interfaces
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show lacp interfaces
+    total:
+      source: inventory.aggregation.total
+    up:
+      source: inventory.aggregation.up
+    down:
+      source: inventory.aggregation.down
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}> ${command}
+    ${records}
+    Aggregate summary: ${total} total, ${up} operational, ${down} down
+  result_schema:
+  - path: aggregation.total
+    type: integer
+    source: inventory.aggregation.total
+  - path: aggregation.up
+    type: integer
+    source: inventory.aggregation.up
+  - path: aggregation.down
+    type: integer
+    source: inventory.aggregation.down
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-juniper-junos-01
+      aggregation:
+        total: 4
+        up: 4
+        down: 0
+      display:
+        records:
+        - 'Aggregated interface: ae1'
+        - '  LACP state: Role Exp Def Dist Col Syn Aggr Timeout Activity'
+        - '  ge-0/0/2 Actor   No  No  Yes Yes Yes Yes Yes Fast Active'
+        - '  ge-0/0/3 Actor   No  No  No  No  No  No  Yes Fast Active'
+        - '  Mux state: Collecting distributing'
+    expected_output: |
+      demo-juniper-junos-01> show lacp interfaces
+      Aggregated interface: ae1
+        LACP state: Role Exp Def Dist Col Syn Aggr Timeout Activity
+        ge-0/0/2 Actor   No  No  Yes Yes Yes Yes Yes Fast Active
+        ge-0/0/3 Actor   No  No  No  No  No  No  Yes Fast Active
+        Mux state: Collecting distributing
+      Aggregate summary: 4 total, 4 operational, 0 down
+    expected_result:
+      aggregation:
+        total: 4
+        up: 4
+        down: 0
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-juniper-junos-01
+      aggregation:
+        total: 4
+        up: 2
+        down: 2
+      display:
+        records:
+        - 'Aggregated interface: ae1'
+        - '  LACP state: Role Exp Def Dist Col Syn Aggr Timeout Activity'
+        - '  ge-0/0/2 Actor   No  No  Yes Yes Yes Yes Yes Fast Active'
+        - '  ge-0/0/3 Actor   No  Yes No  No  No  No  Yes Fast Active'
+        - '  Mux state: Collecting distributing'
+    expected_output: |
+      demo-juniper-junos-01> show lacp interfaces
+      Aggregated interface: ae1
+        LACP state: Role Exp Def Dist Col Syn Aggr Timeout Activity
+        ge-0/0/2 Actor   No  No  Yes Yes Yes Yes Yes Fast Active
+        ge-0/0/3 Actor   No  Yes No  No  No  No  Yes Fast Active
+        Mux state: Collecting distributing
+      Aggregate summary: 4 total, 2 operational, 2 down
+    expected_result:
+      aggregation:
+        total: 4
+        up: 2
+        down: 2

@@ -1,0 +1,125 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_ns_ip
+  title: Citrix ADC / NetScaler — show ns ip
+  description: Deterministic synthetic, vendor-shaped response for show ns ip on Citrix ADC / NetScaler; not captured
+    output.
+  license: Apache-2.0
+  synthetic: true
+  category: neighbors
+spec:
+  platform: citrix_adc
+  platform_aliases:
+  - citrix
+  - netscaler
+  - citrix-adc
+  command: show ns ip
+  aliases:
+  - sh ns ip
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show ns ip
+    count:
+      source: inventory.neighbors.count
+    expected:
+      source: inventory.neighbors.expected_count
+    expected_matches:
+      generator:
+        name: yes_no
+        source: inventory.neighbors.expected_matches
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    > ${command}
+    ${records}
+    Configured NS/SNIP addresses: ${count}
+    Expected configured addresses: ${expected}
+    Inventory set matched: ${expected_matches}
+  result_schema:
+  - path: neighbors.count
+    type: integer
+    source: inventory.neighbors.count
+  - path: neighbors.expected_count
+    type: integer
+    source: inventory.neighbors.expected_count
+  - path: neighbors.expected_matches
+    type: boolean
+    source: inventory.neighbors.expected_matches
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-citrix-adc-01
+      neighbors:
+        count: 6
+        expected_count: 6
+        expected_matches: true
+      display:
+        records:
+        - '1) IP: 192.0.2.10, Netmask: 255.255.255.0, Type: NSIP'
+        - '   State: Enabled, ARP: Enabled, ICMP: Enabled, Management Access: Enabled'
+        - '2) IP: 10.0.0.10, Netmask: 255.255.255.0, Type: SNIP'
+        - '   State: Enabled, ARP: Enabled, ICMP: Enabled, Management Access: Disabled'
+        - '3) IP: 198.51.100.10, Netmask: 255.255.255.0, Type: SNIP'
+        - '   State: Enabled, Dynamic Routing: Enabled'
+        - Done
+    expected_output: |
+      > show ns ip
+      1) IP: 192.0.2.10, Netmask: 255.255.255.0, Type: NSIP
+         State: Enabled, ARP: Enabled, ICMP: Enabled, Management Access: Enabled
+      2) IP: 10.0.0.10, Netmask: 255.255.255.0, Type: SNIP
+         State: Enabled, ARP: Enabled, ICMP: Enabled, Management Access: Disabled
+      3) IP: 198.51.100.10, Netmask: 255.255.255.0, Type: SNIP
+         State: Enabled, Dynamic Routing: Enabled
+      Done
+      Configured NS/SNIP addresses: 6
+      Expected configured addresses: 6
+      Inventory set matched: yes
+    expected_result:
+      neighbors:
+        count: 6
+        expected_count: 6
+        expected_matches: true
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-citrix-adc-01
+      neighbors:
+        count: 4
+        expected_count: 6
+        expected_matches: false
+      display:
+        records:
+        - '1) IP: 192.0.2.10, Netmask: 255.255.255.0, Type: NSIP'
+        - '   State: Enabled, ARP: Enabled, ICMP: Enabled, Management Access: Enabled'
+        - '2) IP: 10.0.0.10, Netmask: 255.255.255.0, Type: SNIP'
+        - '   State: Disabled, ARP: Enabled, ICMP: Enabled, Management Access: Disabled'
+        - '3) IP: 198.51.100.10, Netmask: 255.255.255.0, Type: SNIP'
+        - '   State: Enabled, Dynamic Routing: Enabled'
+        - Done
+    expected_output: |
+      > show ns ip
+      1) IP: 192.0.2.10, Netmask: 255.255.255.0, Type: NSIP
+         State: Enabled, ARP: Enabled, ICMP: Enabled, Management Access: Enabled
+      2) IP: 10.0.0.10, Netmask: 255.255.255.0, Type: SNIP
+         State: Disabled, ARP: Enabled, ICMP: Enabled, Management Access: Disabled
+      3) IP: 198.51.100.10, Netmask: 255.255.255.0, Type: SNIP
+         State: Enabled, Dynamic Routing: Enabled
+      Done
+      Configured NS/SNIP addresses: 4
+      Expected configured addresses: 6
+      Inventory set matched: no
+    expected_result:
+      neighbors:
+        count: 4
+        expected_count: 6
+        expected_matches: false

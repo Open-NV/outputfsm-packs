@@ -1,0 +1,100 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_l2vpn_bridge_domain_brief
+  title: Cisco IOS XR — show l2vpn bridge-domain brief
+  description: Deterministic synthetic, vendor-shaped response for show l2vpn bridge-domain brief on Cisco IOS XR;
+    not captured output.
+  license: Apache-2.0
+  synthetic: true
+  category: vlans
+spec:
+  platform: cisco_iosxr
+  platform_aliases:
+  - iosxr
+  - ios-xr
+  - cisco-ios-xr
+  command: show l2vpn bridge-domain brief
+  aliases:
+  - sh l2vpn bridge-domain brief
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show l2vpn bridge-domain brief
+    total:
+      source: inventory.vlans.total
+    active:
+      source: inventory.vlans.active
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    RP/0/RP0/CPU0:${hostname}#${command}
+    ${records}
+    VLAN summary: ${total} defined, ${active} active
+  result_schema:
+  - path: vlans.total
+    type: integer
+    source: inventory.vlans.total
+  - path: vlans.active
+    type: integer
+    source: inventory.vlans.active
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-cisco-iosxr-01
+      vlans:
+        total: 24
+        active: 24
+      display:
+        records:
+        - VLAN Name                             Status    Ports
+        - '---- -------------------------------- --------- -------------------------------'
+        - 100  server-vlan                      active   Eth1, Eth2, Po10
+        - 200  storage-vlan                     active   Eth3, Eth4, Po20
+        - 300  monitor-vlan                     active   Eth5
+    expected_output: |
+      RP/0/RP0/CPU0:demo-cisco-iosxr-01#show l2vpn bridge-domain brief
+      VLAN Name                             Status    Ports
+      ---- -------------------------------- --------- -------------------------------
+      100  server-vlan                      active   Eth1, Eth2, Po10
+      200  storage-vlan                     active   Eth3, Eth4, Po20
+      300  monitor-vlan                     active   Eth5
+      VLAN summary: 24 defined, 24 active
+    expected_result:
+      vlans:
+        total: 24
+        active: 24
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-cisco-iosxr-01
+      vlans:
+        total: 24
+        active: 0
+      display:
+        records:
+        - VLAN Name                             Status    Ports
+        - '---- -------------------------------- --------- -------------------------------'
+        - 100  server-vlan                      suspendednone
+        - 200  storage-vlan                     suspendednone
+        - 300  monitor-vlan                     suspendedEth5
+    expected_output: |
+      RP/0/RP0/CPU0:demo-cisco-iosxr-01#show l2vpn bridge-domain brief
+      VLAN Name                             Status    Ports
+      ---- -------------------------------- --------- -------------------------------
+      100  server-vlan                      suspendednone
+      200  storage-vlan                     suspendednone
+      300  monitor-vlan                     suspendedEth5
+      VLAN summary: 24 defined, 0 active
+    expected_result:
+      vlans:
+        total: 24
+        active: 0

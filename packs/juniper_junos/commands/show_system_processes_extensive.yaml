@@ -1,0 +1,109 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_system_processes_extensive
+  title: Juniper Junos — show system processes extensive
+  description: Deterministic synthetic, vendor-shaped response for show system processes extensive on Juniper Junos;
+    not captured output.
+  license: Apache-2.0
+  synthetic: true
+  category: cpu
+spec:
+  platform: juniper_junos
+  platform_aliases:
+  - junos
+  - juniper-junos
+  command: show system processes extensive
+  aliases:
+  - sh system processes extensive
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show system processes extensive
+    cpu:
+      generator:
+        name: percent
+        source: inventory.resources.cpu_pct
+        precision: 1
+    load:
+      source: inventory.resources.load_5m
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}> ${command}
+    ${records}
+    CPU utilization: ${cpu}
+    Five-minute load: ${load}
+  result_schema:
+  - path: resources.cpu_pct
+    type: number
+    source: inventory.resources.cpu_pct
+  - path: resources.load_5m
+    type: number
+    source: inventory.resources.load_5m
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-juniper-junos-01
+      resources:
+        cpu_pct: 22.4
+        load_5m: 0.42
+      display:
+        records:
+        - 'last pid: 4031; load averages: 0.42, 0.38, 0.31  up 30+04:12:10'
+        - 'CPU: 22.4% user, 3.2% system, 0.0% interrupt, 74.4% idle'
+        - 'Mem: 2048M Active, 1024M Inact, 512M Wired, 4096M Free'
+        - PID USERNAME  THR PRI NICE   SIZE    RES STATE    C   TIME   WCPU COMMAND
+        - 911 root       14  52    0  812M   244M select  0 112:41 8.2% rpd
+        - 744 root        8  20    0  422M   110M select   1  48:02  1.4% chassisd
+    expected_output: |
+      demo-juniper-junos-01> show system processes extensive
+      last pid: 4031; load averages: 0.42, 0.38, 0.31  up 30+04:12:10
+      CPU: 22.4% user, 3.2% system, 0.0% interrupt, 74.4% idle
+      Mem: 2048M Active, 1024M Inact, 512M Wired, 4096M Free
+      PID USERNAME  THR PRI NICE   SIZE    RES STATE    C   TIME   WCPU COMMAND
+      911 root       14  52    0  812M   244M select  0 112:41 8.2% rpd
+      744 root        8  20    0  422M   110M select   1  48:02  1.4% chassisd
+      CPU utilization: 22.4%
+      Five-minute load: 0.42
+    expected_result:
+      resources:
+        cpu_pct: 22.4
+        load_5m: 0.42
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-juniper-junos-01
+      resources:
+        cpu_pct: 98.1
+        load_5m: 17.9
+      display:
+        records:
+        - 'last pid: 4031; load averages: 17.90, 0.38, 0.31  up 30+04:12:10'
+        - 'CPU: 98.1% user, 3.2% system, 0.0% interrupt, 0.0% idle'
+        - 'Mem: 2048M Active, 1024M Inact, 512M Wired, 4096M Free'
+        - PID USERNAME  THR PRI NICE   SIZE    RES STATE    C   TIME   WCPU COMMAND
+        - 911 root       14  52    0  812M   244M RUN     0 112:41 88.0% rpd
+        - 744 root        8  20    0  422M   110M select   1  48:02  1.4% chassisd
+    expected_output: |
+      demo-juniper-junos-01> show system processes extensive
+      last pid: 4031; load averages: 17.90, 0.38, 0.31  up 30+04:12:10
+      CPU: 98.1% user, 3.2% system, 0.0% interrupt, 0.0% idle
+      Mem: 2048M Active, 1024M Inact, 512M Wired, 4096M Free
+      PID USERNAME  THR PRI NICE   SIZE    RES STATE    C   TIME   WCPU COMMAND
+      911 root       14  52    0  812M   244M RUN     0 112:41 88.0% rpd
+      744 root        8  20    0  422M   110M select   1  48:02  1.4% chassisd
+      CPU utilization: 98.1%
+      Five-minute load: 17.9
+    expected_result:
+      resources:
+        cpu_pct: 98.1
+        load_5m: 17.9

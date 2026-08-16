@@ -1,0 +1,125 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_ns_mode
+  title: Citrix ADC / NetScaler — show ns mode
+  description: Deterministic synthetic, vendor-shaped response for show ns mode on Citrix ADC / NetScaler; not captured
+    output.
+  license: Apache-2.0
+  synthetic: true
+  category: config_state
+spec:
+  platform: citrix_adc
+  platform_aliases:
+  - citrix
+  - netscaler
+  - citrix-adc
+  command: show ns mode
+  aliases:
+  - sh ns mode
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show ns mode
+    clean:
+      generator:
+        name: yes_no
+        source: inventory.config.clean
+    change:
+      source: inventory.config.last_change_id
+    age:
+      source: inventory.config.age_minutes
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    > ${command}
+    ${records}
+    Configuration clean: ${clean}
+    Last change: ${change}
+    Configuration age: ${age} minutes
+  result_schema:
+  - path: config.clean
+    type: boolean
+    source: inventory.config.clean
+  - path: config.last_change_id
+    type: string
+    source: inventory.config.last_change_id
+  - path: config.age_minutes
+    type: integer
+    source: inventory.config.age_minutes
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-citrix-adc-01
+      config:
+        clean: true
+        last_change_id: demo-change-0042
+        age_minutes: 19
+      display:
+        records:
+        - Mode                 Status
+        - '-------------------  --------'
+        - Layer 3              ON
+        - Edge Configuration   OFF
+        - MBF                  OFF
+        - USNIP                ON
+        - Done
+    expected_output: |
+      > show ns mode
+      Mode                 Status
+      -------------------  --------
+      Layer 3              ON
+      Edge Configuration   OFF
+      MBF                  OFF
+      USNIP                ON
+      Done
+      Configuration clean: yes
+      Last change: demo-change-0042
+      Configuration age: 19 minutes
+    expected_result:
+      config:
+        clean: true
+        last_change_id: demo-change-0042
+        age_minutes: 19
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-citrix-adc-01
+      config:
+        clean: false
+        last_change_id: demo-change-pending
+        age_minutes: 2
+      display:
+        records:
+        - Mode                 Status
+        - '-------------------  --------'
+        - Layer 3              ON
+        - Edge Configuration   OFF
+        - MBF                  ON (pending restart)
+        - USNIP                ON
+        - Done
+    expected_output: |
+      > show ns mode
+      Mode                 Status
+      -------------------  --------
+      Layer 3              ON
+      Edge Configuration   OFF
+      MBF                  ON (pending restart)
+      USNIP                ON
+      Done
+      Configuration clean: no
+      Last change: demo-change-pending
+      Configuration age: 2 minutes
+    expected_result:
+      config:
+        clean: false
+        last_change_id: demo-change-pending
+        age_minutes: 2

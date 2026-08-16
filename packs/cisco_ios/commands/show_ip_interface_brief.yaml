@@ -1,0 +1,107 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_ip_interface_brief
+  title: Cisco IOS — show ip interface brief
+  description: Deterministic synthetic, vendor-shaped response for show ip interface brief on Cisco IOS; not captured
+    output.
+  license: Apache-2.0
+  synthetic: true
+  category: interface_summary
+spec:
+  platform: cisco_ios
+  platform_aliases:
+  - ios
+  - cisco-ios
+  command: show ip interface brief
+  aliases:
+  - sh ip interface brief
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show ip interface brief
+    total:
+      source: inventory.interfaces.total
+    up:
+      source: inventory.interfaces.up
+    down:
+      source: inventory.interfaces.down
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}#${command}
+    Interface              IP-Address      OK? Method Status                Protocol
+    ${records}
+    Summary: ${total} interfaces, ${up} up, ${down} down
+  result_schema:
+  - path: interfaces.total
+    type: integer
+    source: inventory.interfaces.total
+  - path: interfaces.up
+    type: integer
+    source: inventory.interfaces.up
+  - path: interfaces.down
+    type: integer
+    source: inventory.interfaces.down
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-cisco-ios-01
+      interfaces:
+        total: 48
+        up: 47
+        down: 1
+      display:
+        records:
+        - GigabitEthernet1/0/1   192.0.2.1       YES manual up                    up
+        - GigabitEthernet1/0/2   198.51.100.1    YES manual up                    up
+        - Loopback0              203.0.113.11    YES manual up                    up
+        - Vlan100                10.0.0.1        YES manual up                    up
+    expected_output: |
+      demo-cisco-ios-01#show ip interface brief
+      Interface              IP-Address      OK? Method Status                Protocol
+      GigabitEthernet1/0/1   192.0.2.1       YES manual up                    up
+      GigabitEthernet1/0/2   198.51.100.1    YES manual up                    up
+      Loopback0              203.0.113.11    YES manual up                    up
+      Vlan100                10.0.0.1        YES manual up                    up
+      Summary: 48 interfaces, 47 up, 1 down
+    expected_result:
+      interfaces:
+        total: 48
+        up: 47
+        down: 1
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-cisco-ios-01
+      interfaces:
+        total: 48
+        up: 42
+        down: 6
+      display:
+        records:
+        - GigabitEthernet1/0/1   192.0.2.1       YES manual up                    up
+        - GigabitEthernet1/0/2   198.51.100.1    YES manual up                    down
+        - Loopback0              203.0.113.11    YES manual up                    up
+        - Vlan100                10.0.0.1        YES manual up                    up
+    expected_output: |
+      demo-cisco-ios-01#show ip interface brief
+      Interface              IP-Address      OK? Method Status                Protocol
+      GigabitEthernet1/0/1   192.0.2.1       YES manual up                    up
+      GigabitEthernet1/0/2   198.51.100.1    YES manual up                    down
+      Loopback0              203.0.113.11    YES manual up                    up
+      Vlan100                10.0.0.1        YES manual up                    up
+      Summary: 48 interfaces, 42 up, 6 down
+    expected_result:
+      interfaces:
+        total: 48
+        up: 42
+        down: 6

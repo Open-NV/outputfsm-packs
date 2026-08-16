@@ -1,0 +1,122 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_ltm_pool_members
+  title: F5 BIG-IP TMOS — show ltm pool members
+  description: Deterministic synthetic, vendor-shaped response for show ltm pool members on F5 BIG-IP TMOS; not
+    captured output.
+  license: Apache-2.0
+  synthetic: true
+  category: lb_member
+spec:
+  platform: f5_tmos
+  platform_aliases:
+  - f5
+  - bigip
+  - big-ip
+  - tmos
+  command: show ltm pool members
+  aliases:
+  - sh ltm pool members
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show ltm pool members
+    members:
+      source: inventory.load_balancing.members
+    up:
+      source: inventory.load_balancing.members_up
+    down:
+      source: inventory.load_balancing.members_down
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}(active)(/Common)(tmos)# ${command}
+    ${records}
+    Member summary: ${up}/${members} up, ${down} down
+  result_schema:
+  - path: load_balancing.members
+    type: integer
+    source: inventory.load_balancing.members
+  - path: load_balancing.members_up
+    type: integer
+    source: inventory.load_balancing.members_up
+  - path: load_balancing.members_down
+    type: integer
+    source: inventory.load_balancing.members_down
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-f5-tmos-01
+      load_balancing:
+        members: 32
+        members_up: 31
+        members_down: 1
+      display:
+        records:
+        - 'Ltm::Pool: /Common/app_pool'
+        - '  Ltm::Pool Member: /Common/10.0.0.20:8080'
+        - '    Availability   : available'
+        - '    State          : enabled'
+        - '    Monitor Status : synthetic app_http'
+        - '  Ltm::Pool Member: /Common/10.0.0.21:8080'
+        - '    Availability   : offline (expected drain)'
+        - '    State          : user-disabled'
+    expected_output: |
+      demo-f5-tmos-01(active)(/Common)(tmos)# show ltm pool members
+      Ltm::Pool: /Common/app_pool
+        Ltm::Pool Member: /Common/10.0.0.20:8080
+          Availability   : available
+          State          : enabled
+          Monitor Status : synthetic app_http
+        Ltm::Pool Member: /Common/10.0.0.21:8080
+          Availability   : offline (expected drain)
+          State          : user-disabled
+      Member summary: 31/32 up, 1 down
+    expected_result:
+      load_balancing:
+        members: 32
+        members_up: 31
+        members_down: 1
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-f5-tmos-01
+      load_balancing:
+        members: 32
+        members_up: 26
+        members_down: 6
+      display:
+        records:
+        - 'Ltm::Pool: /Common/app_pool'
+        - '  Ltm::Pool Member: /Common/10.0.0.20:8080'
+        - '    Availability   : unavailable'
+        - '    State          : disabled'
+        - '    Monitor Status : synthetic app_http'
+        - '  Ltm::Pool Member: /Common/10.0.0.21:8080'
+        - '    Availability   : available'
+        - '    State          : enabled'
+    expected_output: |
+      demo-f5-tmos-01(active)(/Common)(tmos)# show ltm pool members
+      Ltm::Pool: /Common/app_pool
+        Ltm::Pool Member: /Common/10.0.0.20:8080
+          Availability   : unavailable
+          State          : disabled
+          Monitor Status : synthetic app_http
+        Ltm::Pool Member: /Common/10.0.0.21:8080
+          Availability   : available
+          State          : enabled
+      Member summary: 26/32 up, 6 down
+    expected_result:
+      load_balancing:
+        members: 32
+        members_up: 26
+        members_down: 6

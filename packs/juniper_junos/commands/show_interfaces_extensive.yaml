@@ -1,0 +1,121 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_interfaces_extensive
+  title: Juniper Junos — show interfaces extensive
+  description: Deterministic synthetic, vendor-shaped response for show interfaces extensive on Juniper Junos; not
+    captured output.
+  license: Apache-2.0
+  synthetic: true
+  category: interface_detail
+spec:
+  platform: juniper_junos
+  platform_aliases:
+  - junos
+  - juniper-junos
+  command: show interfaces extensive
+  aliases:
+  - sh interfaces extensive
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show interfaces extensive
+    error_count:
+      source: inventory.interfaces.error_count
+    utilization:
+      generator:
+        name: percent
+        source: inventory.interfaces.utilization_pct
+        precision: 1
+    mtu:
+      source: inventory.interfaces.mtu
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}> ${command}
+    ${records}
+      MTU ${mtu} bytes
+      Peak utilization ${utilization}
+      Aggregate input/output errors ${error_count}
+  result_schema:
+  - path: interfaces.error_count
+    type: integer
+    source: inventory.interfaces.error_count
+  - path: interfaces.utilization_pct
+    type: number
+    source: inventory.interfaces.utilization_pct
+  - path: interfaces.mtu
+    type: integer
+    source: inventory.interfaces.mtu
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-juniper-junos-01
+      interfaces:
+        error_count: 0
+        utilization_pct: 31.2
+        mtu: 1500
+      display:
+        records:
+        - 'Physical interface: ge-0/0/0, Enabled, Physical link is Up'
+        - '  Link-level type: Ethernet, Speed: 10Gbps, BPDU Error: None'
+        - '  Input rate     : 312000000 bps (39000 pps)'
+        - '  Output rate    : 184000000 bps (23000 pps)'
+        - '  Carrier transitions: 0'
+        - '  Logical interface ge-0/0/0.0 (Index 333) (SNMP ifIndex 533)'
+    expected_output: |
+      demo-juniper-junos-01> show interfaces extensive
+      Physical interface: ge-0/0/0, Enabled, Physical link is Up
+        Link-level type: Ethernet, Speed: 10Gbps, BPDU Error: None
+        Input rate     : 312000000 bps (39000 pps)
+        Output rate    : 184000000 bps (23000 pps)
+        Carrier transitions: 0
+        Logical interface ge-0/0/0.0 (Index 333) (SNMP ifIndex 533)
+        MTU 1500 bytes
+        Peak utilization 31.2%
+        Aggregate input/output errors 0
+    expected_result:
+      interfaces:
+        error_count: 0
+        utilization_pct: 31.2
+        mtu: 1500
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-juniper-junos-01
+      interfaces:
+        error_count: 14
+        utilization_pct: 97.8
+        mtu: 1500
+      display:
+        records:
+        - 'Physical interface: ge-0/0/0, Enabled, Physical link is Up'
+        - '  Link-level type: Ethernet, Speed: 10Gbps, BPDU Error: None'
+        - '  Input rate     : 312000000 bps (39000 pps)'
+        - '  Output rate    : 184000000 bps (23000 pps)'
+        - '  Carrier transitions: 14'
+        - '  Logical interface ge-0/0/0.0 (Index 333) (SNMP ifIndex 533)'
+    expected_output: |
+      demo-juniper-junos-01> show interfaces extensive
+      Physical interface: ge-0/0/0, Enabled, Physical link is Up
+        Link-level type: Ethernet, Speed: 10Gbps, BPDU Error: None
+        Input rate     : 312000000 bps (39000 pps)
+        Output rate    : 184000000 bps (23000 pps)
+        Carrier transitions: 14
+        Logical interface ge-0/0/0.0 (Index 333) (SNMP ifIndex 533)
+        MTU 1500 bytes
+        Peak utilization 97.8%
+        Aggregate input/output errors 14
+    expected_result:
+      interfaces:
+        error_count: 14
+        utilization_pct: 97.8
+        mtu: 1500

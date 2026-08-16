@@ -1,0 +1,115 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_net_route
+  title: F5 BIG-IP TMOS — show net route
+  description: Deterministic synthetic, vendor-shaped response for show net route on F5 BIG-IP TMOS; not captured
+    output.
+  license: Apache-2.0
+  synthetic: true
+  category: routes
+spec:
+  platform: f5_tmos
+  platform_aliases:
+  - f5
+  - bigip
+  - big-ip
+  - tmos
+  command: show net route
+  aliases:
+  - sh net route
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show net route
+    route_total:
+      source: inventory.routes.total
+    default_present:
+      generator:
+        name: yes_no
+        source: inventory.routes.default_present
+    stale:
+      source: inventory.routes.stale
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}(active)(/Common)(tmos)# ${command}
+    ${records}
+    Route summary: ${route_total} total, ${stale} stale
+    Default route present: ${default_present}
+  result_schema:
+  - path: routes.total
+    type: integer
+    source: inventory.routes.total
+  - path: routes.default_present
+    type: boolean
+    source: inventory.routes.default_present
+  - path: routes.stale
+    type: integer
+    source: inventory.routes.stale
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-f5-tmos-01
+      routes:
+        total: 128
+        default_present: true
+        stale: 0
+      display:
+        records:
+        - Net::Routes
+        - Name              Destination        Type       Gateway
+        - default           default            gw         192.0.2.254
+        - server-net        10.0.0.0/24        interface  /Common/server-vlan
+        - monitor-net       198.51.100.0/24    gw         192.0.2.253
+    expected_output: |
+      demo-f5-tmos-01(active)(/Common)(tmos)# show net route
+      Net::Routes
+      Name              Destination        Type       Gateway
+      default           default            gw         192.0.2.254
+      server-net        10.0.0.0/24        interface  /Common/server-vlan
+      monitor-net       198.51.100.0/24    gw         192.0.2.253
+      Route summary: 128 total, 0 stale
+      Default route present: yes
+    expected_result:
+      routes:
+        total: 128
+        default_present: true
+        stale: 0
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-f5-tmos-01
+      routes:
+        total: 118
+        default_present: false
+        stale: 9
+      display:
+        records:
+        - Net::Routes
+        - Name              Destination        Type       Gateway
+        - default           default            missing    -
+        - server-net        10.0.0.0/24        interface  /Common/server-vlan
+        - monitor-net       198.51.100.0/24    gw         192.0.2.253
+    expected_output: |
+      demo-f5-tmos-01(active)(/Common)(tmos)# show net route
+      Net::Routes
+      Name              Destination        Type       Gateway
+      default           default            missing    -
+      server-net        10.0.0.0/24        interface  /Common/server-vlan
+      monitor-net       198.51.100.0/24    gw         192.0.2.253
+      Route summary: 118 total, 9 stale
+      Default route present: no
+    expected_result:
+      routes:
+        total: 118
+        default_present: false
+        stale: 9

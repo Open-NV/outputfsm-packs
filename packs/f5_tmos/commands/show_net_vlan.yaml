@@ -1,0 +1,101 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_net_vlan
+  title: F5 BIG-IP TMOS — show net vlan
+  description: Deterministic synthetic, vendor-shaped response for show net vlan on F5 BIG-IP TMOS; not captured
+    output.
+  license: Apache-2.0
+  synthetic: true
+  category: vlans
+spec:
+  platform: f5_tmos
+  platform_aliases:
+  - f5
+  - bigip
+  - big-ip
+  - tmos
+  command: show net vlan
+  aliases:
+  - sh net vlan
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show net vlan
+    total:
+      source: inventory.vlans.total
+    active:
+      source: inventory.vlans.active
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}(active)(/Common)(tmos)# ${command}
+    ${records}
+    VLAN summary: ${total} defined, ${active} active
+  result_schema:
+  - path: vlans.total
+    type: integer
+    source: inventory.vlans.total
+  - path: vlans.active
+    type: integer
+    source: inventory.vlans.active
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-f5-tmos-01
+      vlans:
+        total: 24
+        active: 24
+      display:
+        records:
+        - Net::Vlan
+        - Name             Tag    Interfaces
+        - /Common/external  100    1.1, trunk-uplink
+        - /Common/server    200    1.2, trunk-server
+        - /Common/monitor   300    1.3
+    expected_output: |
+      demo-f5-tmos-01(active)(/Common)(tmos)# show net vlan
+      Net::Vlan
+      Name             Tag    Interfaces
+      /Common/external  100    1.1, trunk-uplink
+      /Common/server    200    1.2, trunk-server
+      /Common/monitor   300    1.3
+      VLAN summary: 24 defined, 24 active
+    expected_result:
+      vlans:
+        total: 24
+        active: 24
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-f5-tmos-01
+      vlans:
+        total: 24
+        active: 0
+      display:
+        records:
+        - Net::Vlan
+        - Name             Tag    Interfaces
+        - /Common/external  100    none
+        - /Common/server    200    none
+        - /Common/monitor   300    none
+    expected_output: |
+      demo-f5-tmos-01(active)(/Common)(tmos)# show net vlan
+      Net::Vlan
+      Name             Tag    Interfaces
+      /Common/external  100    none
+      /Common/server    200    none
+      /Common/monitor   300    none
+      VLAN summary: 24 defined, 0 active
+    expected_result:
+      vlans:
+        total: 24
+        active: 0

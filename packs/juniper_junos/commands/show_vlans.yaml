@@ -1,0 +1,94 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_vlans
+  title: Juniper Junos — show vlans
+  description: Deterministic synthetic, vendor-shaped response for show vlans on Juniper Junos; not captured output.
+  license: Apache-2.0
+  synthetic: true
+  category: vlans
+spec:
+  platform: juniper_junos
+  platform_aliases:
+  - junos
+  - juniper-junos
+  command: show vlans
+  aliases:
+  - sh vlans
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show vlans
+    total:
+      source: inventory.vlans.total
+    active:
+      source: inventory.vlans.active
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}> ${command}
+    ${records}
+    VLAN summary: ${total} defined, ${active} active
+  result_schema:
+  - path: vlans.total
+    type: integer
+    source: inventory.vlans.total
+  - path: vlans.active
+    type: integer
+    source: inventory.vlans.active
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-juniper-junos-01
+      vlans:
+        total: 24
+        active: 24
+      display:
+        records:
+        - Routing instance        VLAN name             Tag          Interfaces
+        - default-switch          server-vlan           100          ge-0/0/2.0*
+        - default-switch          storage-vlan          200          ae1.0*
+        - default-switch          monitor-vlan          300          ge-0/0/3.0*
+    expected_output: |
+      demo-juniper-junos-01> show vlans
+      Routing instance        VLAN name             Tag          Interfaces
+      default-switch          server-vlan           100          ge-0/0/2.0*
+      default-switch          storage-vlan          200          ae1.0*
+      default-switch          monitor-vlan          300          ge-0/0/3.0*
+      VLAN summary: 24 defined, 24 active
+    expected_result:
+      vlans:
+        total: 24
+        active: 24
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-juniper-junos-01
+      vlans:
+        total: 24
+        active: 0
+      display:
+        records:
+        - Routing instance        VLAN name             Tag          Interfaces
+        - default-switch          server-vlan           100          none
+        - default-switch          storage-vlan          200          none
+        - default-switch          monitor-vlan          300          none
+    expected_output: |
+      demo-juniper-junos-01> show vlans
+      Routing instance        VLAN name             Tag          Interfaces
+      default-switch          server-vlan           100          none
+      default-switch          storage-vlan          200          none
+      default-switch          monitor-vlan          300          none
+      VLAN summary: 24 defined, 0 active
+    expected_result:
+      vlans:
+        total: 24
+        active: 0

@@ -1,0 +1,114 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_route_ipv4_unicast
+  title: Cisco IOS XR — show route ipv4 unicast
+  description: Deterministic synthetic, vendor-shaped response for show route ipv4 unicast on Cisco IOS XR; not
+    captured output.
+  license: Apache-2.0
+  synthetic: true
+  category: routes
+spec:
+  platform: cisco_iosxr
+  platform_aliases:
+  - iosxr
+  - ios-xr
+  - cisco-ios-xr
+  command: show route ipv4 unicast
+  aliases:
+  - sh route ipv4 unicast
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show route ipv4 unicast
+    route_total:
+      source: inventory.routes.total
+    default_present:
+      generator:
+        name: yes_no
+        source: inventory.routes.default_present
+    stale:
+      source: inventory.routes.stale
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    RP/0/RP0/CPU0:${hostname}#${command}
+    ${records}
+    Route summary: ${route_total} total, ${stale} stale
+    Default route present: ${default_present}
+  result_schema:
+  - path: routes.total
+    type: integer
+    source: inventory.routes.total
+  - path: routes.default_present
+    type: boolean
+    source: inventory.routes.default_present
+  - path: routes.stale
+    type: integer
+    source: inventory.routes.stale
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-cisco-iosxr-01
+      routes:
+        total: 128
+        default_present: true
+        stale: 0
+      display:
+        records:
+        - 'Codes: C - connected, S - static, O - OSPF, B - BGP, L - local'
+        - S*   0.0.0.0/0 [1/0] via 192.0.2.254, 2d03h
+        - L    10.0.0.1/32 is directly connected, 4w2d, Bundle-Ether10
+        - C    10.0.0.0/24 is directly connected, 4w2d, Bundle-Ether10
+        - O    198.51.100.0/24 [110/20] via 192.0.2.2, 00:04:12, GigabitEthernet0/0/0/0
+    expected_output: |
+      RP/0/RP0/CPU0:demo-cisco-iosxr-01#show route ipv4 unicast
+      Codes: C - connected, S - static, O - OSPF, B - BGP, L - local
+      S*   0.0.0.0/0 [1/0] via 192.0.2.254, 2d03h
+      L    10.0.0.1/32 is directly connected, 4w2d, Bundle-Ether10
+      C    10.0.0.0/24 is directly connected, 4w2d, Bundle-Ether10
+      O    198.51.100.0/24 [110/20] via 192.0.2.2, 00:04:12, GigabitEthernet0/0/0/0
+      Route summary: 128 total, 0 stale
+      Default route present: yes
+    expected_result:
+      routes:
+        total: 128
+        default_present: true
+        stale: 0
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-cisco-iosxr-01
+      routes:
+        total: 118
+        default_present: false
+        stale: 9
+      display:
+        records:
+        - 'Codes: C - connected, S - static, O - OSPF, B - BGP, L - local'
+        - '% No gateway of last resort configured'
+        - L    10.0.0.1/32 is directly connected, 4w2d, Bundle-Ether10
+        - C    10.0.0.0/24 is directly connected, 4w2d, Bundle-Ether10
+        - O    198.51.100.0/24 [110/20] via 192.0.2.2, 00:04:12, unresolved
+    expected_output: |
+      RP/0/RP0/CPU0:demo-cisco-iosxr-01#show route ipv4 unicast
+      Codes: C - connected, S - static, O - OSPF, B - BGP, L - local
+      % No gateway of last resort configured
+      L    10.0.0.1/32 is directly connected, 4w2d, Bundle-Ether10
+      C    10.0.0.0/24 is directly connected, 4w2d, Bundle-Ether10
+      O    198.51.100.0/24 [110/20] via 192.0.2.2, 00:04:12, unresolved
+      Route summary: 118 total, 9 stale
+      Default route present: no
+    expected_result:
+      routes:
+        total: 118
+        default_present: false
+        stale: 9

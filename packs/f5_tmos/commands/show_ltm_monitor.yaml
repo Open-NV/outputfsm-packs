@@ -1,0 +1,118 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_ltm_monitor
+  title: F5 BIG-IP TMOS — show ltm monitor
+  description: Deterministic synthetic, vendor-shaped response for show ltm monitor on F5 BIG-IP TMOS; not captured
+    output.
+  license: Apache-2.0
+  synthetic: true
+  category: lb_monitor
+spec:
+  platform: f5_tmos
+  platform_aliases:
+  - f5
+  - bigip
+  - big-ip
+  - tmos
+  command: show ltm monitor
+  aliases:
+  - sh ltm monitor
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show ltm monitor
+    monitors:
+      source: inventory.load_balancing.monitors
+    enabled:
+      source: inventory.load_balancing.monitors_enabled
+    failing:
+      source: inventory.load_balancing.monitors_failing
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}(active)(/Common)(tmos)# ${command}
+    ${records}
+    Monitor summary: ${enabled}/${monitors} enabled, ${failing} failing
+  result_schema:
+  - path: load_balancing.monitors
+    type: integer
+    source: inventory.load_balancing.monitors
+  - path: load_balancing.monitors_enabled
+    type: integer
+    source: inventory.load_balancing.monitors_enabled
+  - path: load_balancing.monitors_failing
+    type: integer
+    source: inventory.load_balancing.monitors_failing
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-f5-tmos-01
+      load_balancing:
+        monitors: 6
+        monitors_enabled: 6
+        monitors_failing: 0
+      display:
+        records:
+        - 'Ltm::Monitor: /Common/app_http'
+        - '  Type             : http'
+        - '  Interval         : 5'
+        - '  Timeout          : 16'
+        - '  Send String      : GET /health HTTP/1.1'
+        - '  Last Result      : connection refused'
+        - '  Failing Instances: 0'
+    expected_output: |
+      demo-f5-tmos-01(active)(/Common)(tmos)# show ltm monitor
+      Ltm::Monitor: /Common/app_http
+        Type             : http
+        Interval         : 5
+        Timeout          : 16
+        Send String      : GET /health HTTP/1.1
+        Last Result      : connection refused
+        Failing Instances: 0
+      Monitor summary: 6/6 enabled, 0 failing
+    expected_result:
+      load_balancing:
+        monitors: 6
+        monitors_enabled: 6
+        monitors_failing: 0
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-f5-tmos-01
+      load_balancing:
+        monitors: 6
+        monitors_enabled: 6
+        monitors_failing: 2
+      display:
+        records:
+        - 'Ltm::Monitor: /Common/app_http'
+        - '  Type             : http'
+        - '  Interval         : 5'
+        - '  Timeout          : 16'
+        - '  Send String      : GET /health HTTP/1.1'
+        - '  Last Result      : connection refused'
+        - '  Failing Instances: 2'
+    expected_output: |
+      demo-f5-tmos-01(active)(/Common)(tmos)# show ltm monitor
+      Ltm::Monitor: /Common/app_http
+        Type             : http
+        Interval         : 5
+        Timeout          : 16
+        Send String      : GET /health HTTP/1.1
+        Last Result      : connection refused
+        Failing Instances: 2
+      Monitor summary: 6/6 enabled, 2 failing
+    expected_result:
+      load_balancing:
+        monitors: 6
+        monitors_enabled: 6
+        monitors_failing: 2

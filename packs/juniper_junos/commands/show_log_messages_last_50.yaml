@@ -1,0 +1,112 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_log_messages_last_50
+  title: Juniper Junos — show log messages | last 50
+  description: Deterministic synthetic, vendor-shaped response for show log messages | last 50 on Juniper Junos;
+    not captured output.
+  license: Apache-2.0
+  synthetic: true
+  category: logging
+spec:
+  platform: juniper_junos
+  platform_aliases:
+  - junos
+  - juniper-junos
+  command: show log messages | last 50
+  aliases:
+  - sh log messages | last 50
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show log messages | last 50
+    critical:
+      source: inventory.logging.critical_count
+    warnings:
+      source: inventory.logging.warning_count
+    last_event:
+      source: inventory.logging.last_event
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}> ${command}
+    ${records}
+    Message summary: ${critical} critical, ${warnings} warning
+    Last event: ${last_event}
+  result_schema:
+  - path: logging.critical_count
+    type: integer
+    source: inventory.logging.critical_count
+  - path: logging.warning_count
+    type: integer
+    source: inventory.logging.warning_count
+  - path: logging.last_event
+    type: string
+    source: inventory.logging.last_event
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-juniper-junos-01
+      logging:
+        critical_count: 0
+        warning_count: 2
+        last_event: synthetic health event
+      display:
+        records:
+        - 'Aug 16 07:00:01 demo-juniper-junos-01 rpd[911]: RPD_BGP_NEIGHBOR_STATE_CHANGED: BGP peer 192.0.2.2 Up'
+        - 'Aug 16 07:00:04 demo-juniper-junos-01 mib2d[744]: SNMP_TRAP_LINK_DOWN: ifIndex 533'
+        - 'Aug 16 07:00:07 demo-juniper-junos-01 chassisd[701]: CHASSISD_SNMP_TRAP10: synthetic health event'
+        - 'Aug 16 07:00:09 demo-juniper-junos-01 eventd[602]: synthetic summary critical=0 warning=2'
+        - '--- last 50 records requested; representative fixture rows shown ---'
+    expected_output: |
+      demo-juniper-junos-01> show log messages | last 50
+      Aug 16 07:00:01 demo-juniper-junos-01 rpd[911]: RPD_BGP_NEIGHBOR_STATE_CHANGED: BGP peer 192.0.2.2 Up
+      Aug 16 07:00:04 demo-juniper-junos-01 mib2d[744]: SNMP_TRAP_LINK_DOWN: ifIndex 533
+      Aug 16 07:00:07 demo-juniper-junos-01 chassisd[701]: CHASSISD_SNMP_TRAP10: synthetic health event
+      Aug 16 07:00:09 demo-juniper-junos-01 eventd[602]: synthetic summary critical=0 warning=2
+      --- last 50 records requested; representative fixture rows shown ---
+      Message summary: 0 critical, 2 warning
+      Last event: synthetic health event
+    expected_result:
+      logging:
+        critical_count: 0
+        warning_count: 2
+        last_event: synthetic health event
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-juniper-junos-01
+      logging:
+        critical_count: 4
+        warning_count: 18
+        last_event: synthetic link and power alarm
+      display:
+        records:
+        - 'Aug 16 07:00:01 demo-juniper-junos-01 rpd[911]: RPD_BGP_NEIGHBOR_STATE_CHANGED: BGP peer 192.0.2.2 Up'
+        - 'Aug 16 07:00:04 demo-juniper-junos-01 mib2d[744]: SNMP_TRAP_LINK_DOWN: ifIndex 533'
+        - 'Aug 16 07:00:07 demo-juniper-junos-01 chassisd[701]: CHASSISD_TEMP_HOT_NOTICE: synthetic link and power
+          alarm'
+        - 'Aug 16 07:00:09 demo-juniper-junos-01 eventd[602]: synthetic summary critical=4 warning=18'
+        - '--- last 50 records requested; representative fixture rows shown ---'
+    expected_output: |
+      demo-juniper-junos-01> show log messages | last 50
+      Aug 16 07:00:01 demo-juniper-junos-01 rpd[911]: RPD_BGP_NEIGHBOR_STATE_CHANGED: BGP peer 192.0.2.2 Up
+      Aug 16 07:00:04 demo-juniper-junos-01 mib2d[744]: SNMP_TRAP_LINK_DOWN: ifIndex 533
+      Aug 16 07:00:07 demo-juniper-junos-01 chassisd[701]: CHASSISD_TEMP_HOT_NOTICE: synthetic link and power alarm
+      Aug 16 07:00:09 demo-juniper-junos-01 eventd[602]: synthetic summary critical=4 warning=18
+      --- last 50 records requested; representative fixture rows shown ---
+      Message summary: 4 critical, 18 warning
+      Last event: synthetic link and power alarm
+    expected_result:
+      logging:
+        critical_count: 4
+        warning_count: 18
+        last_event: synthetic link and power alarm

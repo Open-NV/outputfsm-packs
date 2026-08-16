@@ -1,0 +1,113 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_sys_log_ltm
+  title: F5 BIG-IP TMOS — show sys log ltm
+  description: Deterministic synthetic, vendor-shaped response for show sys log ltm on F5 BIG-IP TMOS; not captured
+    output.
+  license: Apache-2.0
+  synthetic: true
+  category: logging
+spec:
+  platform: f5_tmos
+  platform_aliases:
+  - f5
+  - bigip
+  - big-ip
+  - tmos
+  command: show sys log ltm
+  aliases:
+  - sh sys log ltm
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show sys log ltm
+    critical:
+      source: inventory.logging.critical_count
+    warnings:
+      source: inventory.logging.warning_count
+    last_event:
+      source: inventory.logging.last_event
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}(active)(/Common)(tmos)# ${command}
+    ${records}
+    Message summary: ${critical} critical, ${warnings} warning
+    Last event: ${last_event}
+  result_schema:
+  - path: logging.critical_count
+    type: integer
+    source: inventory.logging.critical_count
+  - path: logging.warning_count
+    type: integer
+    source: inventory.logging.warning_count
+  - path: logging.last_event
+    type: string
+    source: inventory.logging.last_event
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-f5-tmos-01
+      logging:
+        critical_count: 0
+        warning_count: 2
+        last_event: synthetic health event
+      display:
+        records:
+        - Sys::Log LTM (last records)
+        - 'Aug 16 07:00:01 demo-f5-tmos-01 info tmm: virtual /Common/app_https health poll complete'
+        - 'Aug 16 07:00:04 demo-f5-tmos-01 warning mcpd: synthetic utilization threshold crossed'
+        - 'Aug 16 07:00:07 demo-f5-tmos-01 info sod: synthetic health event'
+        - 'Aug 16 07:00:09 demo-f5-tmos-01 warning logger: critical=0 warning=2'
+    expected_output: |
+      demo-f5-tmos-01(active)(/Common)(tmos)# show sys log ltm
+      Sys::Log LTM (last records)
+      Aug 16 07:00:01 demo-f5-tmos-01 info tmm: virtual /Common/app_https health poll complete
+      Aug 16 07:00:04 demo-f5-tmos-01 warning mcpd: synthetic utilization threshold crossed
+      Aug 16 07:00:07 demo-f5-tmos-01 info sod: synthetic health event
+      Aug 16 07:00:09 demo-f5-tmos-01 warning logger: critical=0 warning=2
+      Message summary: 0 critical, 2 warning
+      Last event: synthetic health event
+    expected_result:
+      logging:
+        critical_count: 0
+        warning_count: 2
+        last_event: synthetic health event
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-f5-tmos-01
+      logging:
+        critical_count: 4
+        warning_count: 18
+        last_event: synthetic link and power alarm
+      display:
+        records:
+        - Sys::Log LTM (last records)
+        - 'Aug 16 07:00:01 demo-f5-tmos-01 info tmm: virtual /Common/app_https health poll complete'
+        - 'Aug 16 07:00:04 demo-f5-tmos-01 warning mcpd: synthetic utilization threshold crossed'
+        - 'Aug 16 07:00:07 demo-f5-tmos-01 crit sod: synthetic link and power alarm'
+        - 'Aug 16 07:00:09 demo-f5-tmos-01 warning logger: critical=4 warning=18'
+    expected_output: |
+      demo-f5-tmos-01(active)(/Common)(tmos)# show sys log ltm
+      Sys::Log LTM (last records)
+      Aug 16 07:00:01 demo-f5-tmos-01 info tmm: virtual /Common/app_https health poll complete
+      Aug 16 07:00:04 demo-f5-tmos-01 warning mcpd: synthetic utilization threshold crossed
+      Aug 16 07:00:07 demo-f5-tmos-01 crit sod: synthetic link and power alarm
+      Aug 16 07:00:09 demo-f5-tmos-01 warning logger: critical=4 warning=18
+      Message summary: 4 critical, 18 warning
+      Last event: synthetic link and power alarm
+    expected_result:
+      logging:
+        critical_count: 4
+        warning_count: 18
+        last_event: synthetic link and power alarm

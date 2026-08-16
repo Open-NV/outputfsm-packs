@@ -1,0 +1,111 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_logging_last_50
+  title: Arista EOS — show logging last 50
+  description: Deterministic synthetic, vendor-shaped response for show logging last 50 on Arista EOS; not captured
+    output.
+  license: Apache-2.0
+  synthetic: true
+  category: logging
+spec:
+  platform: arista_eos
+  platform_aliases:
+  - eos
+  - arista-eos
+  command: show logging last 50
+  aliases:
+  - sh logging last 50
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show logging last 50
+    critical:
+      source: inventory.logging.critical_count
+    warnings:
+      source: inventory.logging.warning_count
+    last_event:
+      source: inventory.logging.last_event
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}#${command}
+    ${records}
+    Message summary: ${critical} critical, ${warnings} warning
+    Last event: ${last_event}
+  result_schema:
+  - path: logging.critical_count
+    type: integer
+    source: inventory.logging.critical_count
+  - path: logging.warning_count
+    type: integer
+    source: inventory.logging.warning_count
+  - path: logging.last_event
+    type: string
+    source: inventory.logging.last_event
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-arista-eos-01
+      logging:
+        critical_count: 0
+        warning_count: 2
+        last_event: synthetic health event
+      display:
+        records:
+        - 'Log Buffer (synthetic):'
+        - 'Aug 16 07:00:01 INFO  SYSTEM: health poll completed'
+        - 'Aug 16 07:00:04 WARN  INTERFACE: synthetic utilization threshold crossed'
+        - 'Aug 16 07:00:07 INFO  HA: synthetic health event'
+        - 'Aug 16 07:00:09 WARN  SUMMARY: critical=0 warning=2'
+    expected_output: |
+      demo-arista-eos-01#show logging last 50
+      Log Buffer (synthetic):
+      Aug 16 07:00:01 INFO  SYSTEM: health poll completed
+      Aug 16 07:00:04 WARN  INTERFACE: synthetic utilization threshold crossed
+      Aug 16 07:00:07 INFO  HA: synthetic health event
+      Aug 16 07:00:09 WARN  SUMMARY: critical=0 warning=2
+      Message summary: 0 critical, 2 warning
+      Last event: synthetic health event
+    expected_result:
+      logging:
+        critical_count: 0
+        warning_count: 2
+        last_event: synthetic health event
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-arista-eos-01
+      logging:
+        critical_count: 4
+        warning_count: 18
+        last_event: synthetic link and power alarm
+      display:
+        records:
+        - 'Log Buffer (synthetic):'
+        - 'Aug 16 07:00:01 INFO  SYSTEM: health poll completed'
+        - 'Aug 16 07:00:04 WARN  INTERFACE: synthetic utilization threshold crossed'
+        - 'Aug 16 07:00:07 CRIT  HA: synthetic link and power alarm'
+        - 'Aug 16 07:00:09 WARN  SUMMARY: critical=4 warning=18'
+    expected_output: |
+      demo-arista-eos-01#show logging last 50
+      Log Buffer (synthetic):
+      Aug 16 07:00:01 INFO  SYSTEM: health poll completed
+      Aug 16 07:00:04 WARN  INTERFACE: synthetic utilization threshold crossed
+      Aug 16 07:00:07 CRIT  HA: synthetic link and power alarm
+      Aug 16 07:00:09 WARN  SUMMARY: critical=4 warning=18
+      Message summary: 4 critical, 18 warning
+      Last event: synthetic link and power alarm
+    expected_result:
+      logging:
+        critical_count: 4
+        warning_count: 18
+        last_event: synthetic link and power alarm

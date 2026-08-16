@@ -1,0 +1,282 @@
+id: juniper_junos
+name: Juniper Junos
+aliases:
+- junos
+- juniper-junos
+commands:
+- id: show_version
+  command: show version
+  aliases:
+  - sh version
+  definition: packs/juniper_junos/commands/show_version.yaml
+  result_paths:
+  - system.os_version
+  - system.image
+  - system.uptime_seconds
+  - system.oper_state
+  validation_hint:
+    path: system.oper_state
+    operator: eq
+    expected: up
+    failure_example: down
+- id: show_interfaces_terse
+  command: show interfaces terse
+  aliases:
+  - sh interfaces terse
+  definition: packs/juniper_junos/commands/show_interfaces_terse.yaml
+  result_paths:
+  - interfaces.total
+  - interfaces.up
+  - interfaces.down
+  validation_hint:
+    path: interfaces.down
+    operator: lte
+    expected: 1
+    failure_example: 6
+- id: show_interfaces_extensive
+  command: show interfaces extensive
+  aliases:
+  - sh interfaces extensive
+  definition: packs/juniper_junos/commands/show_interfaces_extensive.yaml
+  result_paths:
+  - interfaces.error_count
+  - interfaces.utilization_pct
+  - interfaces.mtu
+  validation_hint:
+    path: interfaces.error_count
+    operator: lte
+    expected: 0
+    failure_example: 14
+- id: show_route_summary
+  command: show route summary
+  aliases:
+  - sh route summary
+  definition: packs/juniper_junos/commands/show_route_summary.yaml
+  result_paths:
+  - routes.total
+  - routes.default_present
+  - routes.stale
+  validation_hint:
+    path: routes.default_present
+    operator: eq
+    expected: true
+    failure_example: false
+- id: show_arp_no_resolve
+  command: show arp no-resolve
+  aliases:
+  - sh arp no-resolve
+  definition: packs/juniper_junos/commands/show_arp_no_resolve.yaml
+  result_paths:
+  - arp.entries
+  - arp.incomplete
+  validation_hint:
+    path: arp.incomplete
+    operator: eq
+    expected: 0
+    failure_example: 5
+- id: show_ethernet_switching_table
+  command: show ethernet-switching table
+  aliases:
+  - sh ethernet-switching table
+  definition: packs/juniper_junos/commands/show_ethernet_switching_table.yaml
+  result_paths:
+  - mac.entries
+  - mac.dynamic
+  validation_hint:
+    path: mac.entries
+    operator: gte
+    expected: 1
+    failure_example: 0
+- id: show_lldp_neighbors_detail
+  command: show lldp neighbors detail
+  aliases:
+  - sh lldp neighbors detail
+  definition: packs/juniper_junos/commands/show_lldp_neighbors_detail.yaml
+  result_paths:
+  - neighbors.count
+  - neighbors.expected_count
+  - neighbors.expected_matches
+  validation_hint:
+    path: neighbors.expected_matches
+    operator: eq
+    expected: true
+    failure_example: false
+- id: show_vlans
+  command: show vlans
+  aliases:
+  - sh vlans
+  definition: packs/juniper_junos/commands/show_vlans.yaml
+  result_paths:
+  - vlans.total
+  - vlans.active
+  validation_hint:
+    path: vlans.active
+    operator: gte
+    expected: 1
+    failure_example: 0
+- id: show_lacp_interfaces
+  command: show lacp interfaces
+  aliases:
+  - sh lacp interfaces
+  definition: packs/juniper_junos/commands/show_lacp_interfaces.yaml
+  result_paths:
+  - aggregation.total
+  - aggregation.up
+  - aggregation.down
+  validation_hint:
+    path: aggregation.down
+    operator: eq
+    expected: 0
+    failure_example: 2
+- id: show_bgp_summary
+  command: show bgp summary
+  aliases:
+  - sh bgp summary
+  definition: packs/juniper_junos/commands/show_bgp_summary.yaml
+  result_paths:
+  - routing.peers_total
+  - routing.peers_established
+  - routing.established_ratio_pct
+  validation_hint:
+    path: routing.established_ratio_pct
+    operator: gte
+    expected: 95
+    failure_example: 62.5
+- id: show_ospf_neighbor
+  command: show ospf neighbor
+  aliases:
+  - sh ospf neighbor
+  definition: packs/juniper_junos/commands/show_ospf_neighbor.yaml
+  result_paths:
+  - routing.peers_total
+  - routing.peers_established
+  - routing.established_ratio_pct
+  validation_hint:
+    path: routing.established_ratio_pct
+    operator: gte
+    expected: 95
+    failure_example: 62.5
+- id: show_chassis_routing_engine
+  command: show chassis routing-engine
+  aliases:
+  - sh chassis routing-engine
+  definition: packs/juniper_junos/commands/show_chassis_routing_engine.yaml
+  result_paths:
+  - redundancy.state
+  - redundancy.peer_state
+  - redundancy.ready
+  validation_hint:
+    path: redundancy.ready
+    operator: eq
+    expected: true
+    failure_example: false
+- id: show_chassis_hardware
+  command: show chassis hardware
+  aliases:
+  - sh chassis hardware
+  definition: packs/juniper_junos/commands/show_chassis_hardware.yaml
+  result_paths:
+  - hardware.modules_total
+  - hardware.modules_ok
+  - hardware.faulty_modules
+  validation_hint:
+    path: hardware.faulty_modules
+    operator: eq
+    expected: 0
+    failure_example: 1
+- id: show_chassis_environment
+  command: show chassis environment
+  aliases:
+  - sh chassis environment
+  definition: packs/juniper_junos/commands/show_chassis_environment.yaml
+  result_paths:
+  - environment.temp_c
+  - environment.fans_ok
+  - environment.psus_ok
+  validation_hint:
+    path: environment.temp_c
+    operator: lte
+    expected: 75
+    failure_example: 93.0
+- id: show_system_processes_extensive
+  command: show system processes extensive
+  aliases:
+  - sh system processes extensive
+  definition: packs/juniper_junos/commands/show_system_processes_extensive.yaml
+  result_paths:
+  - resources.cpu_pct
+  - resources.load_5m
+  validation_hint:
+    path: resources.cpu_pct
+    operator: lte
+    expected: 80
+    failure_example: 98.1
+- id: show_system_memory
+  command: show system memory
+  aliases:
+  - sh system memory
+  definition: packs/juniper_junos/commands/show_system_memory.yaml
+  result_paths:
+  - resources.memory_used_pct
+  - resources.memory_free_mb
+  validation_hint:
+    path: resources.memory_used_pct
+    operator: lte
+    expected: 85
+    failure_example: 97.0
+- id: show_log_messages_last_50
+  command: show log messages | last 50
+  aliases:
+  - sh log messages | last 50
+  definition: packs/juniper_junos/commands/show_log_messages_last_50.yaml
+  result_paths:
+  - logging.critical_count
+  - logging.warning_count
+  - logging.last_event
+  validation_hint:
+    path: logging.critical_count
+    operator: eq
+    expected: 0
+    failure_example: 4
+- id: show_system_uptime
+  command: show system uptime
+  aliases:
+  - sh system uptime
+  definition: packs/juniper_junos/commands/show_system_uptime.yaml
+  result_paths:
+  - clock.iso8601
+  - clock.synced
+  - clock.offset_ms
+  validation_hint:
+    path: clock.synced
+    operator: eq
+    expected: true
+    failure_example: false
+- id: show_system_commit
+  command: show system commit
+  aliases:
+  - sh system commit
+  definition: packs/juniper_junos/commands/show_system_commit.yaml
+  result_paths:
+  - config.clean
+  - config.last_change_id
+  - config.age_minutes
+  validation_hint:
+    path: config.clean
+    operator: eq
+    expected: true
+    failure_example: false
+- id: show_chassis_alarms
+  command: show chassis alarms
+  aliases:
+  - sh chassis alarms
+  definition: packs/juniper_junos/commands/show_chassis_alarms.yaml
+  result_paths:
+  - health.score
+  - health.status
+  - health.open_alerts
+  validation_hint:
+    path: health.score
+    operator: gte
+    expected: 90
+    failure_example: 44

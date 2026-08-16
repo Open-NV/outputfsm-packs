@@ -1,0 +1,122 @@
+apiVersion: opennv.io/v1alpha1
+kind: OutputFSM
+metadata:
+  id: show_ltm_node
+  title: F5 BIG-IP TMOS — show ltm node
+  description: Deterministic synthetic, vendor-shaped response for show ltm node on F5 BIG-IP TMOS; not captured
+    output.
+  license: Apache-2.0
+  synthetic: true
+  category: lb_server
+spec:
+  platform: f5_tmos
+  platform_aliases:
+  - f5
+  - bigip
+  - big-ip
+  - tmos
+  command: show ltm node
+  aliases:
+  - sh ltm node
+  variables:
+    hostname:
+      source: inventory.hostname
+    command:
+      literal: show ltm node
+    servers:
+      source: inventory.load_balancing.servers
+    up:
+      source: inventory.load_balancing.servers_up
+    down:
+      source: inventory.load_balancing.servers_down
+    records:
+      generator:
+        name: join
+        source: inventory.display.records
+        separator: |2+
+
+  template: |
+    ${hostname}(active)(/Common)(tmos)# ${command}
+    ${records}
+    Server summary: ${up}/${servers} up, ${down} down
+  result_schema:
+  - path: load_balancing.servers
+    type: integer
+    source: inventory.load_balancing.servers
+  - path: load_balancing.servers_up
+    type: integer
+    source: inventory.load_balancing.servers_up
+  - path: load_balancing.servers_down
+    type: integer
+    source: inventory.load_balancing.servers_down
+  fixtures:
+  - name: healthy
+    description: Synthetic deterministic healthy baseline with representative records; not captured from vendor
+      equipment.
+    inventory:
+      hostname: demo-f5-tmos-01
+      load_balancing:
+        servers: 20
+        servers_up: 20
+        servers_down: 0
+      display:
+        records:
+        - 'Ltm::Node: /Common/app-node-01'
+        - '  Availability     : available'
+        - '  State            : enabled'
+        - '  Address          : 10.0.0.20'
+        - '  Monitor          : /Common/app_icmp'
+        - 'Ltm::Node: /Common/app-node-02'
+        - '  Availability     : available'
+        - '  State            : enabled'
+    expected_output: |
+      demo-f5-tmos-01(active)(/Common)(tmos)# show ltm node
+      Ltm::Node: /Common/app-node-01
+        Availability     : available
+        State            : enabled
+        Address          : 10.0.0.20
+        Monitor          : /Common/app_icmp
+      Ltm::Node: /Common/app-node-02
+        Availability     : available
+        State            : enabled
+      Server summary: 20/20 up, 0 down
+    expected_result:
+      load_balancing:
+        servers: 20
+        servers_up: 20
+        servers_down: 0
+  - name: degraded
+    description: Synthetic deterministic degraded scenario designed to fail the catalog validation hint; not captured
+      from vendor equipment.
+    inventory:
+      hostname: demo-f5-tmos-01
+      load_balancing:
+        servers: 20
+        servers_up: 16
+        servers_down: 4
+      display:
+        records:
+        - 'Ltm::Node: /Common/app-node-01'
+        - '  Availability     : unavailable'
+        - '  State            : disabled'
+        - '  Address          : 10.0.0.20'
+        - '  Monitor          : /Common/app_icmp'
+        - 'Ltm::Node: /Common/app-node-02'
+        - '  Availability     : available'
+        - '  State            : enabled'
+    expected_output: |
+      demo-f5-tmos-01(active)(/Common)(tmos)# show ltm node
+      Ltm::Node: /Common/app-node-01
+        Availability     : unavailable
+        State            : disabled
+        Address          : 10.0.0.20
+        Monitor          : /Common/app_icmp
+      Ltm::Node: /Common/app-node-02
+        Availability     : available
+        State            : enabled
+      Server summary: 16/20 up, 4 down
+    expected_result:
+      load_balancing:
+        servers: 20
+        servers_up: 16
+        servers_down: 4
